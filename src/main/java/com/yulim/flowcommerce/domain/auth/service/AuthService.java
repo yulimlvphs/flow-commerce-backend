@@ -50,9 +50,7 @@ public class AuthService {
         String email = normalizeEmail(request.email());
 
         try {
-            authenticationManager.authenticate(
-                    UsernamePasswordAuthenticationToken.unauthenticated(email, request.password())
-            );
+            authenticationManager.authenticate(UsernamePasswordAuthenticationToken.unauthenticated(email, request.password()));
         } catch (BadCredentialsException exception) {
             throw new BusinessException(ErrorCode.INVALID_CREDENTIALS);
         }

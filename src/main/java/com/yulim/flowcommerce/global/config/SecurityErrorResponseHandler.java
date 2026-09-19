@@ -19,8 +19,7 @@ import java.nio.charset.StandardCharsets;
 
 @Component
 @RequiredArgsConstructor
-public class SecurityErrorResponseHandler
-        implements AuthenticationEntryPoint, AccessDeniedHandler {
+public class SecurityErrorResponseHandler implements AuthenticationEntryPoint, AccessDeniedHandler {
 
     private final ObjectMapper objectMapper;
 
