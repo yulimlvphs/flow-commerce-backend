@@ -1,0 +1,16 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:flow-commerce;MODE=MySQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: create-drop
+
+jwt:
+  issuer: flow-commerce-test
+  audience: flow-commerce-api-test
+  secret: test-only-secret-key-must-be-at-least-32-bytes
+  access-token-ttl: 15m
