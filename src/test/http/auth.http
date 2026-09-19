@@ -1,0 +1,28 @@
+@baseUrl = http://localhost:8080
+@email = test@example.com
+@password = test-password-1234
+
+### 회원가입
+POST {{baseUrl}}/api/auth/signup
+Content-Type: application/json
+
+{
+  "email": "{{email}}",
+  "password": "{{password}}"
+}
+
+### 로그인
+# @name login
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{email}}",
+  "password": "{{password}}"
+}
+
+> {%
+    if (response.status === 200) {
+        client.global.set("accessToken", response.body.data.accessToken);
+    }
+%}
