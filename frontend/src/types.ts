@@ -6,7 +6,6 @@ export interface Member {
 
 export interface TokenResponse {
   accessToken: string
-  tokenType: 'Bearer'
   expiresIn: number
 }
 

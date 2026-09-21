@@ -13,13 +13,20 @@ public record JwtProperties(
         @NotBlank String issuer,
         @NotBlank String audience,
         @NotBlank @Size(min = 32) String secret,
-        @NotNull Duration accessTokenTtl
+        @NotNull Duration accessTokenTtl,
+        @NotNull Duration refreshTokenTtl
 ) {
     public JwtProperties {
         if (accessTokenTtl != null
                 && accessTokenTtl.compareTo(Duration.ofSeconds(1)) < 0) {
             throw new IllegalArgumentException(
                     "JWT 유효기간은 1초 이상이어야 합니다."
+            );
+        }
+        if (refreshTokenTtl != null
+                && refreshTokenTtl.compareTo(Duration.ofSeconds(1)) < 0) {
+            throw new IllegalArgumentException(
+                    "리프레시 토큰 유효기간은 1초 이상이어야 합니다."
             );
         }
     }

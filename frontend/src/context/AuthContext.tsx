@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { logoutRequest, refreshAccessToken } from '../lib/api'
 import type { Member, TokenResponse } from '../types'
 
 type JwtPayload = {
@@ -13,10 +14,16 @@ type AuthSession = {
   member: Member | null
 }
 
+type AuthState = {
+  session: AuthSession
+  ready: boolean
+}
+
 type AuthContextValue = {
   member: Member | null
   token: string | null
   isLoggedIn: boolean
+  isAuthReady: boolean
   saveAuth: (auth: TokenResponse) => void
   logout: () => void
 }
@@ -43,23 +50,27 @@ function decodeMember(token: string): Member | null {
   }
 }
 
-function loadSession(): AuthSession {
+function loadAuthState(): AuthState {
   const token = localStorage.getItem('token')
   const member = token ? decodeMember(token) : null
 
-  if (!token || !member) {
-    localStorage.removeItem('token')
+  if (!token) {
     localStorage.removeItem('member')
-    return { token: null, member: null }
+    return { session: { token: null, member: null }, ready: true }
+  }
+
+  if (!member) {
+    return { session: { token: null, member: null }, ready: false }
   }
 
   // 이전 프론트엔드에서 저장하던 회원 캐시는 JWT 클레임으로 대체한다.
   localStorage.removeItem('member')
-  return { token, member }
+  return { session: { token, member }, ready: true }
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [session, setSession] = useState<AuthSession>(loadSession)
+  const [authState, setAuthState] = useState<AuthState>(loadAuthState)
+  const { session } = authState
 
   const saveAuth = useCallback((auth: TokenResponse) => {
     const member = decodeMember(auth.accessToken)
@@ -67,28 +78,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     localStorage.setItem('token', auth.accessToken)
     localStorage.removeItem('member')
-    setSession({ token: auth.accessToken, member })
+    setAuthState({ session: { token: auth.accessToken, member }, ready: true })
   }, [])
 
   const logout = useCallback(() => {
     localStorage.removeItem('token')
     localStorage.removeItem('member')
-    setSession({ token: null, member: null })
+    setAuthState({ session: { token: null, member: null }, ready: true })
+    // 화면 전환은 로컬 상태만으로 즉시 처리하고, 서버 쪽 refresh token 폐기·쿠키 삭제는 백그라운드로 시도한다.
+    logoutRequest().catch(() => undefined)
   }, [])
 
   useEffect(() => {
     const handleExpired = () => logout()
+    const handleRefreshed = (event: Event) => {
+      saveAuth((event as CustomEvent<TokenResponse>).detail)
+    }
     window.addEventListener('auth-expired', handleExpired)
-    return () => window.removeEventListener('auth-expired', handleExpired)
-  }, [logout])
+    window.addEventListener('auth-refreshed', handleRefreshed)
+    return () => {
+      window.removeEventListener('auth-expired', handleExpired)
+      window.removeEventListener('auth-refreshed', handleRefreshed)
+    }
+  }, [logout, saveAuth])
+
+  useEffect(() => {
+    if (authState.ready) return
+    refreshAccessToken()
+      .then(saveAuth)
+      .catch(logout)
+  }, [authState.ready, logout, saveAuth])
 
   const value = useMemo(() => ({
     member: session.member,
     token: session.token,
     isLoggedIn: Boolean(session.token && session.member),
+    isAuthReady: authState.ready,
     saveAuth,
     logout
-  }), [session, saveAuth, logout])
+  }), [authState.ready, session, saveAuth, logout])
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 
