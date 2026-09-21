@@ -1,8 +1,11 @@
 package com.yulim.flowcommerce.domain.auth;
 
 import com.jayway.jsonpath.JsonPath;
+import com.yulim.flowcommerce.domain.auth.entity.RefreshToken;
+import com.yulim.flowcommerce.domain.auth.repository.RefreshTokenRepository;
 import com.yulim.flowcommerce.domain.member.entity.Member;
 import com.yulim.flowcommerce.domain.member.repository.MemberRepository;
+import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +17,13 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
+
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.time.Instant;
+import java.util.Base64;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -35,6 +45,9 @@ class AuthIntegrationTest {
     private MemberRepository memberRepository;
 
     @Autowired
+    private RefreshTokenRepository refreshTokenRepository;
+
+    @Autowired
     private PasswordEncoder passwordEncoder;
 
     @Autowired
@@ -42,6 +55,7 @@ class AuthIntegrationTest {
 
     @BeforeEach
     void cleanDatabase() {
+        refreshTokenRepository.deleteAll();
         memberRepository.deleteAll();
     }
 
@@ -85,7 +99,7 @@ class AuthIntegrationTest {
     void loginIssuesAccessToken() throws Exception {
         signup(EMAIL, PASSWORD);
 
-        String response = mockMvc.perform(post("/api/auth/login")
+        MvcResult loginResult = mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -96,18 +110,114 @@ class AuthIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value("SUCCESS"))
                 .andExpect(jsonPath("$.data.accessToken").isNotEmpty())
-                .andExpect(jsonPath("$.data.tokenType").value("Bearer"))
+                .andExpect(jsonPath("$.data.tokenType").doesNotExist())
                 .andExpect(jsonPath("$.data.expiresIn").value(900))
-                .andReturn()
-                .getResponse()
-                .getContentAsString();
+                .andReturn();
 
+        String response = loginResult.getResponse().getContentAsString();
         String accessToken = JsonPath.read(response, "$.data.accessToken");
         Jwt jwt = jwtDecoder.decode(accessToken);
         assertThat(jwt.getClaimAsString("iss")).isEqualTo("flow-commerce-test");
         assertThat(jwt.getAudience()).containsExactly("flow-commerce-api-test");
         assertThat(jwt.getClaimAsString("email")).isEqualTo(EMAIL);
         assertThat(jwt.getClaimAsString("role")).isEqualTo("USER");
+
+        Cookie refreshToken = loginResult.getResponse().getCookie("refreshToken");
+        assertThat(refreshToken).isNotNull();
+        assertThat(refreshToken.isHttpOnly()).isTrue();
+        assertThat(refreshToken.getSecure()).isTrue();
+        assertThat(refreshToken.getPath()).isEqualTo("/api/auth");
+        assertThat(refreshToken.getMaxAge()).isEqualTo(14 * 24 * 60 * 60);
+        assertThat(refreshTokenRepository.findAll()).singleElement()
+                .satisfies(saved -> {
+                    assertThat(saved.getTokenHash()).isEqualTo(sha256(refreshToken.getValue()));
+                    assertThat(saved.getTokenHash()).doesNotContain(refreshToken.getValue());
+                    assertThat(saved.isRevoked()).isFalse();
+                });
+    }
+
+    @Test
+    void refreshRotatesTokenAndDetectsReuseAcrossTheWholeFamily() throws Exception {
+        signup(EMAIL, PASSWORD);
+        Cookie firstToken = loginAndGetRefreshToken();
+
+        MvcResult refreshResult = mockMvc.perform(post("/api/auth/refresh")
+                        .cookie(firstToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value("SUCCESS"))
+                .andExpect(jsonPath("$.data.accessToken").isNotEmpty())
+                .andReturn();
+
+        Cookie secondToken = refreshResult.getResponse().getCookie("refreshToken");
+        assertThat(secondToken).isNotNull();
+        assertThat(secondToken.getValue()).isNotEqualTo(firstToken.getValue());
+        assertThat(refreshTokenRepository.findAll()).hasSize(2);
+
+        mockMvc.perform(post("/api/auth/refresh").cookie(firstToken))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value("AUTH_004"));
+
+        mockMvc.perform(post("/api/auth/refresh").cookie(secondToken))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value("AUTH_004"));
+        assertThat(refreshTokenRepository.findAll())
+                .allMatch(RefreshToken::isRevoked);
+    }
+
+    @Test
+    void refreshRejectsMissingUnknownAndExpiredTokens() throws Exception {
+        mockMvc.perform(post("/api/auth/refresh"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value("AUTH_002"));
+
+        mockMvc.perform(post("/api/auth/refresh")
+                        .cookie(new Cookie("refreshToken", "unknown-token")))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value("AUTH_002"));
+
+        signup(EMAIL, PASSWORD);
+        Member member = memberRepository.findByEmail(EMAIL).orElseThrow();
+        String expiredRawToken = "expired-refresh-token";
+        refreshTokenRepository.save(RefreshToken.issue(
+                sha256(expiredRawToken),
+                UUID.randomUUID().toString(),
+                member.getId(),
+                Instant.now().minusSeconds(1)
+        ));
+
+        mockMvc.perform(post("/api/auth/refresh")
+                        .cookie(new Cookie("refreshToken", expiredRawToken)))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value("AUTH_003"));
+    }
+
+    @Test
+    void logoutRevokesRefreshTokenAndClearsCookie() throws Exception {
+        signup(EMAIL, PASSWORD);
+        Cookie refreshToken = loginAndGetRefreshToken();
+
+        MvcResult logoutResult = mockMvc.perform(post("/api/auth/logout")
+                        .cookie(refreshToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value("SUCCESS"))
+                .andReturn();
+
+        Cookie clearedCookie = logoutResult.getResponse().getCookie("refreshToken");
+        assertThat(clearedCookie).isNotNull();
+        assertThat(clearedCookie.getMaxAge()).isZero();
+        assertThat(refreshTokenRepository.findAll()).singleElement()
+                .satisfies(saved -> assertThat(saved.isRevoked()).isTrue());
+
+        mockMvc.perform(post("/api/auth/refresh").cookie(refreshToken))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value("AUTH_004"));
+    }
+
+    @Test
+    void logoutWithoutRefreshTokenCookieIsANoOpSuccess() throws Exception {
+        mockMvc.perform(post("/api/auth/logout"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value("SUCCESS"));
     }
 
     @Test
@@ -175,5 +285,25 @@ class AuthIntegrationTest {
                                 }
                                 """.formatted(email, password)))
                 .andExpect(status().isCreated());
+    }
+
+    private Cookie loginAndGetRefreshToken() throws Exception {
+        MvcResult result = mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "email": "%s",
+                                  "password": "%s"
+                                }
+                                """.formatted(EMAIL, PASSWORD)))
+                .andExpect(status().isOk())
+                .andReturn();
+        return result.getResponse().getCookie("refreshToken");
+    }
+
+    private static String sha256(String value) throws Exception {
+        byte[] hash = MessageDigest.getInstance("SHA-256")
+                .digest(value.getBytes(StandardCharsets.UTF_8));
+        return Base64.getEncoder().encodeToString(hash);
     }
 }

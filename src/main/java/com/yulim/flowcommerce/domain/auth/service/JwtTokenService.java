@@ -19,8 +19,6 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class JwtTokenService {
 
-    private static final String TOKEN_TYPE = "Bearer";
-
     private final JwtEncoder jwtEncoder;
     private final JwtProperties jwtProperties;
 
@@ -44,7 +42,6 @@ public class JwtTokenService {
                 .getTokenValue();
         return new TokenResponse(
                 accessToken,
-                TOKEN_TYPE,
                 jwtProperties.accessTokenTtl().toSeconds()
         );
     }

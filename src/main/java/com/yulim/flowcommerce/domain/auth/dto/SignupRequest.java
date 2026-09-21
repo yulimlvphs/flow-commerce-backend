@@ -12,7 +12,7 @@ public record SignupRequest(
         String email,
 
         @NotBlank(message = "비밀번호는 필수입니다.")
-        @Size(min = 12, message = "비밀번호는 12자 이상이어야 합니다.")
+        @Size(min = 8, message = "비밀번호는 8자 이상이어야 합니다.")
         @Utf8ByteLength(max = 72, message = "비밀번호는 UTF-8 기준 72바이트 이하여야 합니다.")
         String password
 ) {
