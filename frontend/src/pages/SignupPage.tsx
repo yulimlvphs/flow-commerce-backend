@@ -2,7 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useUi } from '../context/UiContext'
 import { apiFetch } from '../lib/api'
-import type { Member } from '../types'
+import type { User } from '../types'
 
 export function SignupPage() {
   const { showToast } = useUi()
@@ -17,9 +17,9 @@ export function SignupPage() {
       if (new TextEncoder().encode(form.password).length > 72) {
         throw new Error('비밀번호는 UTF-8 기준 72바이트 이하여야 합니다.')
       }
-      const member = await apiFetch<Member>('/api/auth/signup', { method: 'POST', body: JSON.stringify(form) })
+      const user = await apiFetch<User>('/api/auth/signup', { method: 'POST', body: JSON.stringify(form) })
       showToast('회원가입이 완료되었습니다')
-      navigate('/login', { state: { email: member.email } })
+      navigate('/login', { state: { email: user.email } })
     }
     catch (error) { showToast((error as Error).message, 'danger') }
     finally { setLoading(false) }

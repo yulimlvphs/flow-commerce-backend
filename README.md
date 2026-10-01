@@ -134,3 +134,14 @@ GET http://localhost:8080/actuator/health
 - [ ] `[FlowCommerce][Auth]` GlobalExceptionHandler로는 401/403을 못 잡는 이유
 - [ ] `[FlowCommerce][Order]` 동시성 이슈 재현부터 해결까지
 - [ ] `[FlowCommerce][Queue]` Redis Sorted Set으로 대기열 구현하기
+
+
+## 사용자 도메인 이름 변경
+
+사용자 도메인은 `domain.user`의 `User`, `UserRole`, `UserRepository`로 통일했다.
+인증 응답은 `UserResponse`, 프론트 인증 상태는 `user`, 사용자 오류 코드는 `USER_001`~`USER_003`을 사용한다.
+
+기존 MySQL DB에는 애플리케이션을 중지한 뒤
+[`scripts/sql/20261001_rename_user_domain.sql`](scripts/sql/20261001_rename_user_domain.sql)을 한 번 실행하고 새 버전을 시작한다.
+테이블과 컬럼을 이름 변경하므로 기존 사용자 ID, 비밀번호, 역할, 리프레시 토큰 및 상품의 판매자 ID가 유지된다.
+신규 DB는 JPA가 `users`와 `refresh_tokens.user_id`를 생성하므로 이 이관 스크립트를 실행하지 않는다.

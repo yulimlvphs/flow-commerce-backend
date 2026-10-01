@@ -2,18 +2,18 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useUi } from '../context/UiContext'
-import type { Member } from '../types'
+import type { User } from '../types'
 
-const roleLabels: Record<Member['role'], string> = { USER: '일반 회원', SELLER: '판매자', ADMIN: '관리자' }
+const roleLabels: Record<User['role'], string> = { USER: '일반 회원', SELLER: '판매자', ADMIN: '관리자' }
 
 const notices = ['타임딜 가격과 판매 일정을 확인하세요', '딜별 남은 수량과 1인 구매 한도를 확인하세요']
 
 export function Layout() {
-  const { member, isLoggedIn, logout } = useAuth()
+  const { user, isLoggedIn, logout } = useAuth()
   const { showToast } = useUi()
   const navigate = useNavigate()
-  const isSeller = isLoggedIn && member?.role === 'SELLER'
-  const roleLabel = member ? `${roleLabels[member.role]} (${member.role})` : ''
+  const isSeller = isLoggedIn && user?.role === 'SELLER'
+  const roleLabel = user ? `${roleLabels[user.role]} (${user.role})` : ''
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
@@ -72,14 +72,14 @@ export function Layout() {
                   <button onClick={() => setUserMenuOpen((open) => !open)} className="flex items-center gap-2 text-sf-black hover:text-sf-accent transition-colors text-left" aria-label="사용자 메뉴" aria-expanded={userMenuOpen}>
                     <i className="ri-user-line text-[20px]" aria-hidden="true" />
                     <span className="hidden lg:block max-w-48">
-                      <span className="block truncate text-xs font-semibold">{member?.email}</span>
+                      <span className="block truncate text-xs font-semibold">{user?.email}</span>
                       <span className="block text-[11px] text-gray-500 mt-0.5">{roleLabel}</span>
                     </span>
                   </button>
                   {userMenuOpen && (
                     <div className="absolute right-0 mt-3 w-56 bg-white rounded-lg py-1 z-50 border border-gray-100 shadow-lg">
                       <div className="px-4 py-3 border-b border-gray-100">
-                        <p className="text-sm font-semibold text-sf-black">{member?.email ?? '사용자'}</p>
+                        <p className="text-sm font-semibold text-sf-black">{user?.email ?? '사용자'}</p>
                         <p className="text-xs text-gray-500 mt-0.5">{roleLabel}</p>
                       </div>
                       {isSeller && <Link onClick={() => setUserMenuOpen(false)} to="/seller/products" className="flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-sf-cream"><i className="ri-store-2-line" aria-hidden="true" />상품 관리</Link>}

@@ -1,4 +1,4 @@
-export interface Member {
+export interface User {
   id: number
   email: string
   role: 'USER' | 'SELLER' | 'ADMIN'

@@ -1,6 +1,6 @@
 package com.yulim.flowcommerce.global.config;
 
-import com.yulim.flowcommerce.domain.member.repository.MemberRepository;
+import com.yulim.flowcommerce.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -91,11 +91,11 @@ public class SecurityConfig {
     }
 
     @Bean
-    UserDetailsService userDetailsService(MemberRepository memberRepository) {
-        return username -> memberRepository.findByEmail(username)
-                .map(member -> User.withUsername(member.getEmail())
-                        .password(member.getPasswordHash())
-                        .roles(member.getRole().name())
+    UserDetailsService userDetailsService(UserRepository userRepository) {
+        return username -> userRepository.findByEmail(username)
+                .map(user -> User.withUsername(user.getEmail())
+                        .password(user.getPasswordHash())
+                        .roles(user.getRole().name())
                         .build())
                 .orElseThrow(() -> new UsernameNotFoundException("회원을 찾을 수 없습니다."));
     }

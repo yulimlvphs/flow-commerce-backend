@@ -1,17 +1,17 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { logoutRequest, refreshAccessToken } from '../lib/api'
-import type { Member, TokenResponse } from '../types'
+import type { User, TokenResponse } from '../types'
 
 type JwtPayload = {
   sub?: string
   email?: string
-  role?: Member['role']
+  role?: User['role']
   exp?: number
 }
 
 type AuthSession = {
   token: string | null
-  member: Member | null
+  user: User | null
 }
 
 type AuthState = {
@@ -20,7 +20,7 @@ type AuthState = {
 }
 
 type AuthContextValue = {
-  member: Member | null
+  user: User | null
   token: string | null
   isLoggedIn: boolean
   isAuthReady: boolean
@@ -30,7 +30,7 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | null>(null)
 
-function decodeMember(token: string): Member | null {
+function decodeUser(token: string): User | null {
   try {
     const encodedPayload = token.split('.')[1]
     if (!encodedPayload) return null
@@ -52,20 +52,17 @@ function decodeMember(token: string): Member | null {
 
 function loadAuthState(): AuthState {
   const token = localStorage.getItem('token')
-  const member = token ? decodeMember(token) : null
+  const user = token ? decodeUser(token) : null
 
   if (!token) {
-    localStorage.removeItem('member')
-    return { session: { token: null, member: null }, ready: true }
+    return { session: { token: null, user: null }, ready: true }
   }
 
-  if (!member) {
-    return { session: { token: null, member: null }, ready: false }
+  if (!user) {
+    return { session: { token: null, user: null }, ready: false }
   }
 
-  // 이전 프론트엔드에서 저장하던 회원 캐시는 JWT 클레임으로 대체한다.
-  localStorage.removeItem('member')
-  return { session: { token, member }, ready: true }
+  return { session: { token, user }, ready: true }
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -73,18 +70,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const { session } = authState
 
   const saveAuth = useCallback((auth: TokenResponse) => {
-    const member = decodeMember(auth.accessToken)
-    if (!member) throw new Error('로그인 응답의 토큰 정보가 올바르지 않습니다.')
+    const user = decodeUser(auth.accessToken)
+    if (!user) throw new Error('로그인 응답의 토큰 정보가 올바르지 않습니다.')
 
     localStorage.setItem('token', auth.accessToken)
-    localStorage.removeItem('member')
-    setAuthState({ session: { token: auth.accessToken, member }, ready: true })
+    setAuthState({ session: { token: auth.accessToken, user }, ready: true })
   }, [])
 
   const logout = useCallback(() => {
     localStorage.removeItem('token')
-    localStorage.removeItem('member')
-    setAuthState({ session: { token: null, member: null }, ready: true })
+    setAuthState({ session: { token: null, user: null }, ready: true })
     // 화면 전환은 로컬 상태만으로 즉시 처리하고, 서버 쪽 refresh token 폐기·쿠키 삭제는 백그라운드로 시도한다.
     logoutRequest().catch(() => undefined)
   }, [])
@@ -110,9 +105,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [authState.ready, logout, saveAuth])
 
   const value = useMemo(() => ({
-    member: session.member,
+    user: session.user,
     token: session.token,
-    isLoggedIn: Boolean(session.token && session.member),
+    isLoggedIn: Boolean(session.token && session.user),
     isAuthReady: authState.ready,
     saveAuth,
     logout

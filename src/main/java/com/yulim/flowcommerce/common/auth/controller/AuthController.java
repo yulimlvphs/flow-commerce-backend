@@ -1,7 +1,7 @@
 package com.yulim.flowcommerce.common.auth.controller;
 
 import com.yulim.flowcommerce.common.auth.dto.LoginRequest;
-import com.yulim.flowcommerce.common.auth.dto.MemberResponse;
+import com.yulim.flowcommerce.common.auth.dto.UserResponse;
 import com.yulim.flowcommerce.common.auth.dto.SignupRequest;
 import com.yulim.flowcommerce.common.auth.dto.TokenPair;
 import com.yulim.flowcommerce.common.auth.dto.TokenResponse;
@@ -30,9 +30,9 @@ public class AuthController {
     private final JwtProperties jwtProperties;
 
     @PostMapping("/signup")
-    public ResponseEntity<ApiResponse<MemberResponse>> signup(@Valid @RequestBody SignupRequest request) {
-        MemberResponse member = authService.signup(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(member));
+    public ResponseEntity<ApiResponse<UserResponse>> signup(@Valid @RequestBody SignupRequest request) {
+        UserResponse user = authService.signup(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(user));
     }
 
     @PostMapping("/login")

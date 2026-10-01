@@ -58,13 +58,11 @@ export async function logoutRequest(): Promise<void> {
 
 function saveRefreshedAuth(auth: TokenResponse) {
   localStorage.setItem('token', auth.accessToken)
-  localStorage.removeItem('member')
   window.dispatchEvent(new CustomEvent<TokenResponse>('auth-refreshed', { detail: auth }))
 }
 
 function expireAuth() {
   localStorage.removeItem('token')
-  localStorage.removeItem('member')
   window.dispatchEvent(new CustomEvent('auth-expired'))
 }
 

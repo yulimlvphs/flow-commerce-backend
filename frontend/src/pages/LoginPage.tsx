@@ -40,7 +40,7 @@ export function LoginPage() {
       <div><label className="block text-xs font-semibold text-gray-700 mb-2 uppercase tracking-widest">비밀번호</label><input value={password} onChange={(e) => setPassword(e.target.value)} type="password" required className="w-full border border-gray-300 px-4 py-3 text-sm" placeholder="비밀번호" /></div>
       <button disabled={loading} className="w-full bg-black text-white py-4 text-sm font-light uppercase tracking-widest hover:bg-gray-900 flex justify-center">{loading ? <span className="spinner" /> : '로그인'}</button>
     </form>
-    <button type="button" onClick={() => { setEmail('member@example.com'); setPassword('test-password-1234') }} className="w-full mt-4 border border-gray-200 py-3 text-xs text-gray-500 hover:bg-gray-50">테스트 계정 입력</button>
+    <button type="button" onClick={() => { setEmail('user@example.com'); setPassword('test-password-1234') }} className="w-full mt-4 border border-gray-200 py-3 text-xs text-gray-500 hover:bg-gray-50">테스트 계정 입력</button>
     <p className="text-center text-sm text-gray-500 mt-8">아직 회원이 아니신가요? <Link to="/signup" className="font-semibold text-black hover:underline">회원가입</Link></p>
   </div>
 }

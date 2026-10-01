@@ -1,7 +1,7 @@
 package com.yulim.flowcommerce.common.auth.service;
 
 import com.yulim.flowcommerce.common.auth.dto.TokenResponse;
-import com.yulim.flowcommerce.domain.member.entity.Member;
+import com.yulim.flowcommerce.domain.user.entity.User;
 import com.yulim.flowcommerce.global.config.JwtProperties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
@@ -22,7 +22,7 @@ public class JwtTokenService {
     private final JwtEncoder jwtEncoder;
     private final JwtProperties jwtProperties;
 
-    public TokenResponse issue(Member member) {
+    public TokenResponse issue(User user) {
         Instant issuedAt = Instant.now();
         Instant expiresAt = issuedAt.plus(jwtProperties.accessTokenTtl());
 
@@ -32,10 +32,10 @@ public class JwtTokenService {
                 .audience(List.of(jwtProperties.audience()))
                 .issuedAt(issuedAt)
                 .expiresAt(expiresAt)
-                .subject(member.getId().toString())
+                .subject(user.getId().toString())
                 .id(UUID.randomUUID().toString())
-                .claim("email", member.getEmail())
-                .claim("role", member.getRole().name())
+                .claim("email", user.getEmail())
+                .claim("role", user.getRole().name())
                 .build();
 
         String accessToken = jwtEncoder.encode(JwtEncoderParameters.from(header, claims))

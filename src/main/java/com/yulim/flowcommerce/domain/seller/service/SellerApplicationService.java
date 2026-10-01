@@ -1,7 +1,7 @@
 package com.yulim.flowcommerce.domain.seller.service;
 
-import com.yulim.flowcommerce.domain.member.entity.Member;
-import com.yulim.flowcommerce.domain.member.repository.MemberRepository;
+import com.yulim.flowcommerce.domain.user.entity.User;
+import com.yulim.flowcommerce.domain.user.repository.UserRepository;
 import com.yulim.flowcommerce.domain.seller.dto.SellerApplicationRejectRequest;
 import com.yulim.flowcommerce.domain.seller.dto.SellerApplicationRequest;
 import com.yulim.flowcommerce.domain.seller.dto.SellerApplicationResponse;
@@ -28,13 +28,13 @@ public class SellerApplicationService {
             List.of(SellerApplication.ApplicationStatus.PENDING, SellerApplication.ApplicationStatus.APPROVED);
 
     private final SellerApplicationRepository sellerApplicationRepository;
-    private final MemberRepository memberRepository;
+    private final UserRepository userRepository;
 
     @Transactional
     public SellerApplicationResponse apply(Long userId, SellerApplicationRequest request) {
-        Member member = findUserOrThrow(userId);
+        User user = findUserOrThrow(userId);
 
-        if (member.isSeller()) {
+        if (user.isSeller()) {
             throw new BusinessException(ALREADY_SELLER, "이미 판매자 권한을 보유한 회원입니다. userId=" + userId);
         }
 
@@ -79,8 +79,8 @@ public class SellerApplicationService {
         SellerApplication application = findApplicationOrThrow(applicationId);
         validatePending(application);
 
-        Member member = findUserOrThrow(application.getUserId());
-        member.promoteToSeller();
+        User user = findUserOrThrow(application.getUserId());
+        user.promoteToSeller();
         application.approve(adminId);
 
         return SellerApplicationResponse.from(application);
@@ -100,8 +100,8 @@ public class SellerApplicationService {
                 .orElseThrow(() -> new BusinessException(APPLICATION_NOT_FOUND, "신청 내역을 찾을 수 없습니다. id=" + applicationId));
     }
 
-    private Member findUserOrThrow(Long userId) {
-        return memberRepository.findById(userId)
+    private User findUserOrThrow(Long userId) {
+        return userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(APPLICATION_NOT_FOUND, "회원을 찾을 수 없습니다. userId=" + userId));
     }
 
