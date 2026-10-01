@@ -17,7 +17,7 @@ declare global {
 export function CheckoutPage() {
   const [params] = useSearchParams()
   const navigate = useNavigate()
-  const { member } = useAuth()
+  const { user } = useAuth()
   const { showToast } = useUi()
   const [checkout, setCheckout] = useState<CheckoutData | null>(null)
   const [config, setConfig] = useState<PortOneConfig | null>(null)
@@ -55,7 +55,7 @@ export function CheckoutPage() {
       const order = await apiFetch<OrderCheckoutResponse>('/api/orders/checkout', { method: 'POST', body: JSON.stringify(orderBody) })
       setButtonLabel('결제창 여는 중...')
       const customer: Record<string, string> = {}
-      if (member?.email) customer.email = member.email
+      if (user?.email) customer.email = user.email
       const response = await window.PortOne.requestPayment({ storeId: config.storeId, channelKey: config.channelKey, paymentId: order.portonePaymentId, orderName: order.orderName, totalAmount: order.totalPrice, currency: 'KRW', payMethod: 'CARD', customer })
       if (response.code === undefined) {
         setButtonLabel('결제 확인 중...')

@@ -1,13 +1,13 @@
 package com.yulim.flowcommerce.common.auth.service;
 
 import com.yulim.flowcommerce.common.auth.dto.LoginRequest;
-import com.yulim.flowcommerce.common.auth.dto.MemberResponse;
+import com.yulim.flowcommerce.common.auth.dto.UserResponse;
 import com.yulim.flowcommerce.common.auth.dto.SignupRequest;
 import com.yulim.flowcommerce.common.auth.dto.TokenPair;
 import com.yulim.flowcommerce.common.auth.entity.RefreshToken;
 import com.yulim.flowcommerce.common.auth.repository.RefreshTokenRepository;
-import com.yulim.flowcommerce.domain.member.entity.Member;
-import com.yulim.flowcommerce.domain.member.repository.MemberRepository;
+import com.yulim.flowcommerce.domain.user.entity.User;
+import com.yulim.flowcommerce.domain.user.repository.UserRepository;
 import com.yulim.flowcommerce.global.config.JwtProperties;
 import com.yulim.flowcommerce.common.constant.ErrorCode;
 import com.yulim.flowcommerce.global.exception.BusinessException;
@@ -35,7 +35,7 @@ public class AuthService {
 
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
-    private final MemberRepository memberRepository;
+    private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
@@ -43,17 +43,17 @@ public class AuthService {
     private final JwtProperties jwtProperties;
 
     @Transactional
-    public MemberResponse signup(SignupRequest request) {
+    public UserResponse signup(SignupRequest request) {
         String email = normalizeEmail(request.email());
 
-        if (memberRepository.existsByEmail(email)) {
+        if (userRepository.existsByEmail(email)) {
             throw new BusinessException(ErrorCode.DUPLICATE_EMAIL);
         }
 
-        Member member = Member.register(email, passwordEncoder.encode(request.password()));
+        User user = User.register(email, passwordEncoder.encode(request.password()));
 
         try {
-            return MemberResponse.from(memberRepository.saveAndFlush(member));
+            return UserResponse.from(userRepository.saveAndFlush(user));
         } catch (DataIntegrityViolationException exception) {
             throw new BusinessException(ErrorCode.DUPLICATE_EMAIL);
         }
@@ -69,18 +69,18 @@ public class AuthService {
             throw new BusinessException(ErrorCode.INVALID_CREDENTIALS);
         }
 
-        Member member = memberRepository.findByEmail(email)
+        User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_CREDENTIALS));
 
         String rawRefreshToken = generateRandomToken();
         refreshTokenRepository.save(RefreshToken.issue(
                 sha256(rawRefreshToken),
                 UUID.randomUUID().toString(),
-                member.getId(),
+                user.getId(),
                 Instant.now().plus(jwtProperties.refreshTokenTtl())
         ));
 
-        return new TokenPair(jwtTokenService.issue(member), rawRefreshToken);
+        return new TokenPair(jwtTokenService.issue(user), rawRefreshToken);
     }
 
     @Transactional(noRollbackFor = BusinessException.class)
@@ -102,7 +102,7 @@ public class AuthService {
             throw new BusinessException(ErrorCode.EXPIRED_REFRESH_TOKEN);
         }
 
-        Member member = memberRepository.findById(saved.getMemberId())
+        User user = userRepository.findById(saved.getUserId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_REFRESH_TOKEN));
         saved.revoke();
 
@@ -110,11 +110,11 @@ public class AuthService {
         refreshTokenRepository.save(RefreshToken.issue(
                 sha256(newRawRefreshToken),
                 saved.getFamilyId(), // 패밀리의 계승. 원래 있던 familyId를 그대로 물려받음.
-                saved.getMemberId(),
+                saved.getUserId(),
                 now.plus(jwtProperties.refreshTokenTtl())
         ));
 
-        return new TokenPair(jwtTokenService.issue(member), newRawRefreshToken);
+        return new TokenPair(jwtTokenService.issue(user), newRawRefreshToken);
     }
 
     @Transactional

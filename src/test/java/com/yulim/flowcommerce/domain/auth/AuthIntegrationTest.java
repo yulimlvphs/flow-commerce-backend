@@ -3,8 +3,8 @@ package com.yulim.flowcommerce.domain.auth;
 import com.jayway.jsonpath.JsonPath;
 import com.yulim.flowcommerce.common.auth.entity.RefreshToken;
 import com.yulim.flowcommerce.common.auth.repository.RefreshTokenRepository;
-import com.yulim.flowcommerce.domain.member.entity.Member;
-import com.yulim.flowcommerce.domain.member.repository.MemberRepository;
+import com.yulim.flowcommerce.domain.user.entity.User;
+import com.yulim.flowcommerce.domain.user.repository.UserRepository;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -35,14 +35,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 class AuthIntegrationTest {
 
-    private static final String EMAIL = "member@example.com";
+    private static final String EMAIL = "user@example.com";
     private static final String PASSWORD = "test-password-1234";
 
     @Autowired
     private MockMvc mockMvc;
 
     @Autowired
-    private MemberRepository memberRepository;
+    private UserRepository userRepository;
 
     @Autowired
     private RefreshTokenRepository refreshTokenRepository;
@@ -56,7 +56,7 @@ class AuthIntegrationTest {
     @BeforeEach
     void cleanDatabase() {
         refreshTokenRepository.deleteAll();
-        memberRepository.deleteAll();
+        userRepository.deleteAll();
     }
 
     @Test
@@ -65,7 +65,7 @@ class AuthIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
-                                  "email": "MEMBER@EXAMPLE.COM",
+                                  "email": "USER@EXAMPLE.COM",
                                   "password": "test-password-1234"
                                 }
                                 """))
@@ -74,9 +74,9 @@ class AuthIntegrationTest {
                 .andExpect(jsonPath("$.data.email").value(EMAIL))
                 .andExpect(jsonPath("$.data.role").value("USER"));
 
-        Member member = memberRepository.findByEmail(EMAIL).orElseThrow();
-        assertThat(member.getPasswordHash()).isNotEqualTo(PASSWORD);
-        assertThat(passwordEncoder.matches(PASSWORD, member.getPasswordHash())).isTrue();
+        User user = userRepository.findByEmail(EMAIL).orElseThrow();
+        assertThat(user.getPasswordHash()).isNotEqualTo(PASSWORD);
+        assertThat(passwordEncoder.matches(PASSWORD, user.getPasswordHash())).isTrue();
     }
 
     @Test
@@ -87,12 +87,12 @@ class AuthIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
-                                  "email": "MEMBER@EXAMPLE.COM",
+                                  "email": "USER@EXAMPLE.COM",
                                   "password": "another-password-1234"
                                 }
                                 """))
                 .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.code").value("MEMBER_002"));
+                .andExpect(jsonPath("$.code").value("USER_002"));
     }
 
     @Test
@@ -103,7 +103,7 @@ class AuthIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
-                                  "email": "MEMBER@EXAMPLE.COM",
+                                  "email": "USER@EXAMPLE.COM",
                                   "password": "test-password-1234"
                                 }
                                 """))
@@ -176,12 +176,12 @@ class AuthIntegrationTest {
                 .andExpect(jsonPath("$.code").value("AUTH_002"));
 
         signup(EMAIL, PASSWORD);
-        Member member = memberRepository.findByEmail(EMAIL).orElseThrow();
+        User user = userRepository.findByEmail(EMAIL).orElseThrow();
         String expiredRawToken = "expired-refresh-token";
         refreshTokenRepository.save(RefreshToken.issue(
                 sha256(expiredRawToken),
                 UUID.randomUUID().toString(),
-                member.getId(),
+                user.getId(),
                 Instant.now().minusSeconds(1)
         ));
 
@@ -228,12 +228,12 @@ class AuthIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
-                                  "email": "member@example.com",
+                                  "email": "user@example.com",
                                   "password": "wrong-password-1234"
                                 }
                                 """))
                 .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.code").value("MEMBER_003"));
+                .andExpect(jsonPath("$.code").value("USER_003"));
 
         mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -244,7 +244,7 @@ class AuthIntegrationTest {
                                 }
                                 """))
                 .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.code").value("MEMBER_003"));
+                .andExpect(jsonPath("$.code").value("USER_003"));
     }
 
     @Test

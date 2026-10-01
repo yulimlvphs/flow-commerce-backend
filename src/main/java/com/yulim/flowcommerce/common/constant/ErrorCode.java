@@ -13,10 +13,10 @@ public enum ErrorCode {
     INTERNAL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "COMMON_002", "서버 내부 오류가 발생했습니다."),
     FORBIDDEN_ACCESS(HttpStatus.FORBIDDEN, "COMMON_003", "접근 권한이 없습니다."),
 
-    // Member
-    MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "MEMBER_001", "회원을 찾을 수 없습니다."),
-    DUPLICATE_EMAIL(HttpStatus.CONFLICT, "MEMBER_002", "이미 존재하는 이메일입니다."),
-    INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED, "MEMBER_003", "이메일 또는 비밀번호가 올바르지 않습니다."),
+    // User
+    USER_NOT_FOUND(HttpStatus.NOT_FOUND, "USER_001", "회원을 찾을 수 없습니다."),
+    DUPLICATE_EMAIL(HttpStatus.CONFLICT, "USER_002", "이미 존재하는 이메일입니다."),
+    INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED, "USER_003", "이메일 또는 비밀번호가 올바르지 않습니다."),
 
     // Seller
     ALREADY_SELLER(HttpStatus.CONFLICT, "SELLER_001", "이미 판매자 권한을 보유하고 있습니다."),
@@ -44,7 +44,7 @@ public enum ErrorCode {
     INVALID_ORDER_ITEM_SELECTION(HttpStatus.BAD_REQUEST, "ORDER_002", "주문할 수 없는 상품이 포함되어 있습니다."),
     DUPLICATE_ORDER_ITEM_SELECTION(HttpStatus.BAD_REQUEST, "ORDER_003", "주문 대상 상품이 중복 선택되었습니다."),
     ORDER_STOCK_INSUFFICIENT(HttpStatus.CONFLICT, "ORDER_005", "주문 상품의 재고가 부족합니다."),
-    ORDER_MEMBER_ID_REQUIRED(HttpStatus.BAD_REQUEST, "ORDER_006", "회원 ID는 필수입니다."),
+    ORDER_USER_ID_REQUIRED(HttpStatus.BAD_REQUEST, "ORDER_006", "회원 ID는 필수입니다."),
     ORDER_NUMBER_REQUIRED(HttpStatus.BAD_REQUEST, "ORDER_007", "주문번호는 필수입니다."),
     ORDER_NOT_FOUND(HttpStatus.NOT_FOUND, "ORDER_008", "주문을 찾을 수 없습니다."),
     ORDER_PAYMENT_INFORMATION_UNAVAILABLE(HttpStatus.INTERNAL_SERVER_ERROR, "ORDER_009", "주문의 결제 정보를 확인할 수 없습니다."),
