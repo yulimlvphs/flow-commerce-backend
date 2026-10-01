@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { Link, Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useUi } from '../context/UiContext'
 import type { User } from '../types'
@@ -56,17 +56,6 @@ export function Layout() {
             </Link>
             <nav className="hidden md:flex items-center gap-12"><Link to="/" className="text-sm font-bold">타임딜</Link></nav>
             <div className="flex items-center gap-3 sm:gap-4">
-              {isSeller && (
-                <NavLink
-                  to="/seller/products"
-                  aria-label="판매자 상품 관리"
-                  title="상품 관리"
-                  className={({ isActive }) => `inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-bold transition-colors ${isActive ? 'bg-black text-white' : 'bg-gray-100 text-sf-black hover:bg-gray-200'}`}
-                >
-                  <i className="ri-store-2-line text-xl" aria-hidden="true" />
-                  <span className="hidden sm:inline">상품 관리</span>
-                </NavLink>
-              )}
               {isLoggedIn ? (
                 <div className="relative" ref={userMenuRef}>
                   <button onClick={() => setUserMenuOpen((open) => !open)} className="flex items-center gap-2 text-sf-black hover:text-sf-accent transition-colors text-left" aria-label="사용자 메뉴" aria-expanded={userMenuOpen}>
@@ -83,6 +72,7 @@ export function Layout() {
                         <p className="text-xs text-gray-500 mt-0.5">{roleLabel}</p>
                       </div>
                       {isSeller && <Link onClick={() => setUserMenuOpen(false)} to="/seller/products" className="flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-sf-cream"><i className="ri-store-2-line" aria-hidden="true" />상품 관리</Link>}
+                      {user?.role === 'ADMIN' && <Link onClick={() => setUserMenuOpen(false)} to="/admin/seller-applications" className="flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-sf-cream"><i className="ri-shield-user-line" aria-hidden="true" />판매자 신청 관리</Link>}
                       <button onClick={handleLogout} className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-gray-600 hover:bg-sf-cream transition-colors">
                         <i className="ri-logout-box-r-line text-gray-400" aria-hidden="true" /> 로그아웃
                       </button>
@@ -101,14 +91,14 @@ export function Layout() {
             </div>
           </div>
         </div>
-        {mobileMenuOpen && <div className="md:hidden border-t border-gray-100 bg-white"><div className="max-w-[1280px] mx-auto px-4 py-3 space-y-3"><Link to="/" onClick={() => setMobileMenuOpen(false)} className="block text-sm">타임딜</Link>{isSeller && <Link to="/seller/products" onClick={() => setMobileMenuOpen(false)} className="block text-sm">상품 관리</Link>}</div></div>}
+        {mobileMenuOpen && <div className="md:hidden border-t border-gray-100 bg-white"><div className="max-w-[1280px] mx-auto px-4 py-3 space-y-3"><Link to="/" onClick={() => setMobileMenuOpen(false)} className="block text-sm">타임딜</Link></div></div>}
       </header>
 
       <main className="flex-1"><Outlet /></main>
 
       <footer className="bg-sf-black text-white mt-auto border-t border-gray-900">
         <div className="max-w-[1280px] mx-auto px-4 sm:px-6 py-16">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-12">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
             <div>
               <div className="flex items-center gap-1 mb-6"><span className="text-lg font-light tracking-wider">SPARTA</span><span className="text-lg font-black tracking-wider">FASHION</span></div>
               <p className="text-sm font-light text-gray-300 leading-relaxed">트렌디한 패션을 합리적인 가격에.<br />당신의 스타일을 완성하세요.</p>
@@ -116,6 +106,13 @@ export function Layout() {
             <div>
               <h4 className="text-xs font-bold text-white uppercase tracking-widest mb-4">고객센터</h4>
               <ul className="space-y-2.5 text-sm font-light text-gray-400"><li>평일 10:00 - 18:00</li><li>점심 12:00 - 13:00</li><li>주말/공휴일 휴무</li></ul>
+            </div>
+            <div>
+              <h4 className="text-xs font-bold text-white uppercase tracking-widest mb-4">판매자 전환</h4>
+              <ul className="space-y-2.5 text-sm font-light text-gray-400">
+                <li><Link to="/seller/apply" className="hover:text-white transition-colors">판매자 전환 신청</Link></li>
+                <li><Link to="/seller/apply/me" className="hover:text-white transition-colors">내 신청 상태 조회</Link></li>
+              </ul>
             </div>
             <div>
               <h4 className="text-xs font-bold text-white uppercase tracking-widest mb-4">이용안내</h4>

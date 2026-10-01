@@ -6,6 +6,8 @@ import { LoginPage } from './pages/LoginPage'
 import { NotFoundPage } from './pages/NotFoundPage'
 import { DealDetailPage } from './pages/DealDetailPage'
 import { SellerProductsPage } from './pages/SellerProductsPage'
+import { SellerApplicationPage } from './pages/SellerApplicationPage'
+import { AdminSellerApplicationsPage } from './pages/AdminSellerApplicationsPage'
 import { SignupPage } from './pages/SignupPage'
 
 export default function App() {
@@ -14,6 +16,9 @@ export default function App() {
       <Route index element={<HomePage />} />
       <Route path="deals/:id" element={<DealDetailPage />} />
       <Route path="seller/products" element={<ProtectedRoute role="SELLER"><SellerProductsPage /></ProtectedRoute>} />
+      <Route path="seller/apply" element={<ProtectedRoute><SellerApplicationPage /></ProtectedRoute>} />
+      <Route path="seller/apply/me" element={<ProtectedRoute><SellerApplicationPage showStatus /></ProtectedRoute>} />
+      <Route path="admin/seller-applications" element={<ProtectedRoute role="ADMIN"><AdminSellerApplicationsPage /></ProtectedRoute>} />
       <Route path="login" element={<LoginPage />} />
       <Route path="signup" element={<SignupPage />} />
       <Route path="*" element={<NotFoundPage />} />

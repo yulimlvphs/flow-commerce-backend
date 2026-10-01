@@ -98,3 +98,14 @@ export interface Deal {
   openAt: string
   closeAt: string
 }
+
+export interface SellerApplication {
+  id: number
+  userId: number
+  businessName: string
+  businessRegistrationNumber: string
+  status: 'PENDING' | 'APPROVED' | 'REJECTED'
+  rejectReason?: string | null
+  appliedAt: string
+  reviewedAt?: string | null
+}
