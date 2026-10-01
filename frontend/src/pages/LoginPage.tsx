@@ -15,7 +15,8 @@ export function LoginPage() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
 
-  useEffect(() => { document.title = '로그인 | SpartaFashion'; if (isLoggedIn) navigate('/', { replace: true }) }, [isLoggedIn, navigate])
+  const destination = (location.state as { from?: string } | null)?.from || '/'
+  useEffect(() => { document.title = '로그인 | SpartaFashion'; if (isLoggedIn) navigate(destination, { replace: true }) }, [isLoggedIn, navigate, destination])
 
   const submit = async (event: FormEvent) => {
     event.preventDefault(); setLoading(true)
@@ -25,7 +26,7 @@ export function LoginPage() {
       }
       const data = await apiFetch<TokenResponse>('/api/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) })
       saveAuth(data); showToast('로그인되었습니다')
-      navigate((location.state as { from?: string } | null)?.from || '/')
+      navigate(destination, { replace: true })
     } catch (error) { showToast((error as Error).message, 'danger') }
     finally { setLoading(false) }
   }

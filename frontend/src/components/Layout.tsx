@@ -1,26 +1,21 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link, Outlet, useNavigate } from 'react-router-dom'
-import { apiFetch } from '../lib/api'
+import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useUi } from '../context/UiContext'
-import type { CartItem } from '../types'
+import type { Member } from '../types'
 
-const notices = [
-  '신규 회원가입 시 10% 할인 쿠폰 즉시 지급',
-  '3만원 이상 구매 시 무료배송',
-  '2026 S/S 신상품 입고',
-  '평일 오후 2시 이전 주문 당일 출고',
-  '7일 이내 무료 교환·반품',
-  '카드 결제 시 최대 12개월 무이자 할부'
-]
+const roleLabels: Record<Member['role'], string> = { USER: '일반 회원', SELLER: '판매자', ADMIN: '관리자' }
+
+const notices = ['타임딜 가격과 판매 일정을 확인하세요', '딜별 남은 수량과 1인 구매 한도를 확인하세요']
 
 export function Layout() {
   const { member, isLoggedIn, logout } = useAuth()
   const { showToast } = useUi()
   const navigate = useNavigate()
+  const isSeller = isLoggedIn && member?.role === 'SELLER'
+  const roleLabel = member ? `${roleLabels[member.role]} (${member.role})` : ''
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [cartCount, setCartCount] = useState(0)
   const [scrolled, setScrolled] = useState(false)
   const userMenuRef = useRef<HTMLDivElement>(null)
 
@@ -36,24 +31,6 @@ export function Layout() {
       document.removeEventListener('mousedown', onClick)
     }
   }, [])
-
-  useEffect(() => {
-    if (!isLoggedIn) {
-      setCartCount(0)
-      return
-    }
-    apiFetch<CartItem[]>('/api/cart/items')
-      .then((items) => setCartCount(items.length))
-      .catch(() => undefined)
-
-    const update = (event: Event) => {
-      const detail = (event as CustomEvent<number>).detail
-      if (typeof detail === 'number') setCartCount(detail)
-      else apiFetch<CartItem[]>('/api/cart/items').then((items) => setCartCount(items.length)).catch(() => undefined)
-    }
-    window.addEventListener('cart-updated', update)
-    return () => window.removeEventListener('cart-updated', update)
-  }, [isLoggedIn])
 
   const handleLogout = () => {
     logout()
@@ -77,31 +54,35 @@ export function Layout() {
               <span className="text-xl font-light tracking-wider text-sf-black">SPARTA</span>
               <span className="text-xl font-black tracking-wider text-sf-black">FASHION</span>
             </Link>
-            <nav className="hidden md:flex items-center gap-12" />
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => isLoggedIn ? navigate('/cart') : (showToast('로그인이 필요합니다', 'warning'), navigate('/login'))}
-                className="relative text-sf-black hover:text-sf-accent transition-colors"
-                aria-label="장바구니"
-              >
-                <i className="ri-shopping-bag-line text-[20px]" aria-hidden="true" />
-                {cartCount > 0 && <span className="absolute -top-2 -right-2 w-5 h-5 bg-sf-accent text-white text-[10px] font-bold rounded-full flex items-center justify-center badge-pulse">{cartCount}</span>}
-              </button>
-
+            <nav className="hidden md:flex items-center gap-12"><Link to="/" className="text-sm font-bold">타임딜</Link></nav>
+            <div className="flex items-center gap-3 sm:gap-4">
+              {isSeller && (
+                <NavLink
+                  to="/seller/products"
+                  aria-label="판매자 상품 관리"
+                  title="상품 관리"
+                  className={({ isActive }) => `inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-bold transition-colors ${isActive ? 'bg-black text-white' : 'bg-gray-100 text-sf-black hover:bg-gray-200'}`}
+                >
+                  <i className="ri-store-2-line text-xl" aria-hidden="true" />
+                  <span className="hidden sm:inline">상품 관리</span>
+                </NavLink>
+              )}
               {isLoggedIn ? (
                 <div className="relative" ref={userMenuRef}>
-                  <button onClick={() => setUserMenuOpen((open) => !open)} className="text-sf-black hover:text-sf-accent transition-colors" aria-label="사용자 메뉴" aria-expanded={userMenuOpen}>
+                  <button onClick={() => setUserMenuOpen((open) => !open)} className="flex items-center gap-2 text-sf-black hover:text-sf-accent transition-colors text-left" aria-label="사용자 메뉴" aria-expanded={userMenuOpen}>
                     <i className="ri-user-line text-[20px]" aria-hidden="true" />
+                    <span className="hidden lg:block max-w-48">
+                      <span className="block truncate text-xs font-semibold">{member?.email}</span>
+                      <span className="block text-[11px] text-gray-500 mt-0.5">{roleLabel}</span>
+                    </span>
                   </button>
                   {userMenuOpen && (
                     <div className="absolute right-0 mt-3 w-56 bg-white rounded-lg py-1 z-50 border border-gray-100 shadow-lg">
                       <div className="px-4 py-3 border-b border-gray-100">
                         <p className="text-sm font-semibold text-sf-black">{member?.email ?? '사용자'}</p>
-                        <p className="text-xs text-gray-500 mt-0.5">{member?.role === 'ADMIN' ? '관리자' : '일반 회원'}</p>
+                        <p className="text-xs text-gray-500 mt-0.5">{roleLabel}</p>
                       </div>
-                      <Link onClick={() => setUserMenuOpen(false)} to="/orders" className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-sf-cream transition-colors">
-                        <i className="ri-file-list-3-line text-gray-400" aria-hidden="true" /> 주문내역
-                      </Link>
+                      {isSeller && <Link onClick={() => setUserMenuOpen(false)} to="/seller/products" className="flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-sf-cream"><i className="ri-store-2-line" aria-hidden="true" />상품 관리</Link>}
                       <button onClick={handleLogout} className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-gray-600 hover:bg-sf-cream transition-colors">
                         <i className="ri-logout-box-r-line text-gray-400" aria-hidden="true" /> 로그아웃
                       </button>
@@ -120,7 +101,7 @@ export function Layout() {
             </div>
           </div>
         </div>
-        {mobileMenuOpen && <div className="md:hidden border-t border-gray-100 bg-white"><div className="max-w-[1280px] mx-auto px-4 py-3 space-y-1" /></div>}
+        {mobileMenuOpen && <div className="md:hidden border-t border-gray-100 bg-white"><div className="max-w-[1280px] mx-auto px-4 py-3 space-y-3"><Link to="/" onClick={() => setMobileMenuOpen(false)} className="block text-sm">타임딜</Link>{isSeller && <Link to="/seller/products" onClick={() => setMobileMenuOpen(false)} className="block text-sm">상품 관리</Link>}</div></div>}
       </header>
 
       <main className="flex-1"><Outlet /></main>

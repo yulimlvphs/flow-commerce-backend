@@ -83,3 +83,18 @@ export interface PortOnePaymentResponse {
   message?: string
   paymentId: string
 }
+
+export interface Deal {
+  id: number
+  productId: number
+  name: string
+  description: string | null
+  thumbnailUrl: string | null
+  originalPrice: number
+  dealPrice: number
+  status: 'SCHEDULED' | 'OPEN' | 'SOLD_OUT' | 'CLOSED'
+  remainingStock: number
+  maxPurchasePerUser: number
+  openAt: string
+  closeAt: string
+}
