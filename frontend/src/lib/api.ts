@@ -6,6 +6,13 @@ type ApiEnvelope<T> = {
   message?: string
 }
 
+export class ApiError extends Error {
+  constructor(message: string, public readonly status: number, public readonly code?: string) {
+    super(message)
+    this.name = 'ApiError'
+  }
+}
+
 let refreshRequest: Promise<TokenResponse> | null = null
 
 async function parseResponse<T>(response: Response): Promise<T> {
@@ -19,11 +26,11 @@ async function parseResponse<T>(response: Response): Promise<T> {
   }
 
   if (!response.ok) {
-    throw new Error(payload?.message || `HTTP ${response.status}`)
+    throw new ApiError(payload?.message || `HTTP ${response.status}`, response.status, payload?.code)
   }
 
   if (payload?.code && payload.code !== 'SUCCESS') {
-    throw new Error(payload.message || payload.code)
+    throw new ApiError(payload.message || payload.code, response.status, payload.code)
   }
 
   return payload?.data as T
