@@ -41,7 +41,7 @@ function decodeMember(token: string): Member | null {
     const id = Number(payload.sub)
 
     if (!Number.isSafeInteger(id) || !payload.email) return null
-    if (payload.role !== 'USER' && payload.role !== 'ADMIN') return null
+    if (payload.role !== 'USER' && payload.role !== 'SELLER' && payload.role !== 'ADMIN') return null
     if (payload.exp && payload.exp * 1000 <= Date.now()) return null
 
     return { id, email: payload.email, role: payload.role }

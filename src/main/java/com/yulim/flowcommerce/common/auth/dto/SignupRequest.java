@@ -1,4 +1,4 @@
-package com.yulim.flowcommerce.domain.auth.dto;
+package com.yulim.flowcommerce.common.auth.dto;
 
 import com.yulim.flowcommerce.global.validation.Utf8ByteLength;
 import jakarta.validation.constraints.Email;

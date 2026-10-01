@@ -1,13 +1,13 @@
-package com.yulim.flowcommerce.domain.auth.controller;
+package com.yulim.flowcommerce.common.auth.controller;
 
-import com.yulim.flowcommerce.domain.auth.dto.LoginRequest;
-import com.yulim.flowcommerce.domain.auth.dto.MemberResponse;
-import com.yulim.flowcommerce.domain.auth.dto.SignupRequest;
-import com.yulim.flowcommerce.domain.auth.dto.TokenPair;
-import com.yulim.flowcommerce.domain.auth.dto.TokenResponse;
-import com.yulim.flowcommerce.domain.auth.service.AuthService;
+import com.yulim.flowcommerce.common.auth.dto.LoginRequest;
+import com.yulim.flowcommerce.common.auth.dto.MemberResponse;
+import com.yulim.flowcommerce.common.auth.dto.SignupRequest;
+import com.yulim.flowcommerce.common.auth.dto.TokenPair;
+import com.yulim.flowcommerce.common.auth.dto.TokenResponse;
+import com.yulim.flowcommerce.common.auth.service.AuthService;
 import com.yulim.flowcommerce.global.config.JwtProperties;
-import com.yulim.flowcommerce.global.response.ApiResponse;
+import com.yulim.flowcommerce.common.response.ApiResponse;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

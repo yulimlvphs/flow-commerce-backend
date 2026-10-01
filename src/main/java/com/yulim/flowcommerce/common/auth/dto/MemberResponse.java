@@ -1,4 +1,4 @@
-package com.yulim.flowcommerce.domain.auth.dto;
+package com.yulim.flowcommerce.common.auth.dto;
 
 import com.yulim.flowcommerce.domain.member.entity.Member;
 import com.yulim.flowcommerce.domain.member.entity.MemberRole;

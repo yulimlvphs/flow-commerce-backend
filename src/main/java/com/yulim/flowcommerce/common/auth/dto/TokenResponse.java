@@ -1,4 +1,4 @@
-package com.yulim.flowcommerce.domain.auth.dto;
+package com.yulim.flowcommerce.common.auth.dto;
 
 public record TokenResponse(
         String accessToken,
