@@ -1,6 +1,6 @@
-package com.yulim.flowcommerce.domain.auth.service;
+package com.yulim.flowcommerce.common.auth.service;
 
-import com.yulim.flowcommerce.domain.auth.dto.TokenResponse;
+import com.yulim.flowcommerce.common.auth.dto.TokenResponse;
 import com.yulim.flowcommerce.domain.member.entity.Member;
 import com.yulim.flowcommerce.global.config.JwtProperties;
 import lombok.RequiredArgsConstructor;

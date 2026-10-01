@@ -1,8 +1,8 @@
 package com.yulim.flowcommerce.domain.auth;
 
 import com.jayway.jsonpath.JsonPath;
-import com.yulim.flowcommerce.domain.auth.entity.RefreshToken;
-import com.yulim.flowcommerce.domain.auth.repository.RefreshTokenRepository;
+import com.yulim.flowcommerce.common.auth.entity.RefreshToken;
+import com.yulim.flowcommerce.common.auth.repository.RefreshTokenRepository;
 import com.yulim.flowcommerce.domain.member.entity.Member;
 import com.yulim.flowcommerce.domain.member.repository.MemberRepository;
 import jakarta.servlet.http.Cookie;

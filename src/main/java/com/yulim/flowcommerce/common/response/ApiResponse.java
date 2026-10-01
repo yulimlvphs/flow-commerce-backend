@@ -1,7 +1,7 @@
-package com.yulim.flowcommerce.global.response;
+package com.yulim.flowcommerce.common.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.yulim.flowcommerce.global.constant.ErrorCode;
+import com.yulim.flowcommerce.common.constant.ErrorCode;
 import lombok.Getter;
 
 @Getter

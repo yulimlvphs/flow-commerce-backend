@@ -1,7 +1,7 @@
 export interface Member {
   id: number
   email: string
-  role: 'USER' | 'ADMIN'
+  role: 'USER' | 'SELLER' | 'ADMIN'
 }
 
 export interface TokenResponse {
@@ -11,10 +11,20 @@ export interface TokenResponse {
 
 export interface Product {
   id: number
+  sellerId: number
   name: string
-  price: number
-  stock: number
-  description: string
+  originalPrice: number
+  description: string | null
+  thumbnailUrl: string | null
+  status: 'ACTIVE' | 'INACTIVE'
+  createdAt: string
+}
+
+export interface PageResponse<T> {
+  content: T[]
+  totalElements: number
+  totalPages: number
+  number: number
 }
 
 export interface CartItem {

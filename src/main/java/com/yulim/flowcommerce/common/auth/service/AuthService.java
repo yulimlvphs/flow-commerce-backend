@@ -1,16 +1,15 @@
-package com.yulim.flowcommerce.domain.auth.service;
+package com.yulim.flowcommerce.common.auth.service;
 
-import com.yulim.flowcommerce.domain.auth.dto.LoginRequest;
-import com.yulim.flowcommerce.domain.auth.dto.MemberResponse;
-import com.yulim.flowcommerce.domain.auth.dto.SignupRequest;
-import com.yulim.flowcommerce.domain.auth.dto.TokenPair;
-import com.yulim.flowcommerce.domain.auth.dto.TokenResponse;
-import com.yulim.flowcommerce.domain.auth.entity.RefreshToken;
-import com.yulim.flowcommerce.domain.auth.repository.RefreshTokenRepository;
+import com.yulim.flowcommerce.common.auth.dto.LoginRequest;
+import com.yulim.flowcommerce.common.auth.dto.MemberResponse;
+import com.yulim.flowcommerce.common.auth.dto.SignupRequest;
+import com.yulim.flowcommerce.common.auth.dto.TokenPair;
+import com.yulim.flowcommerce.common.auth.entity.RefreshToken;
+import com.yulim.flowcommerce.common.auth.repository.RefreshTokenRepository;
 import com.yulim.flowcommerce.domain.member.entity.Member;
 import com.yulim.flowcommerce.domain.member.repository.MemberRepository;
 import com.yulim.flowcommerce.global.config.JwtProperties;
-import com.yulim.flowcommerce.global.constant.ErrorCode;
+import com.yulim.flowcommerce.common.constant.ErrorCode;
 import com.yulim.flowcommerce.global.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;

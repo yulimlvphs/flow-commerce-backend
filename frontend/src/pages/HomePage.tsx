@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { ProductVisual } from '../components/ProductVisual'
-import { useAuth } from '../context/AuthContext'
 import { useUi } from '../context/UiContext'
 import { apiFetch } from '../lib/api'
 import { formatPrice } from '../lib/format'
-import type { Product } from '../types'
+import type { PageResponse, Product } from '../types'
 
 function ProductSkeleton() {
   return <div className="animate-fade-in"><div className="skeleton skeleton-img aspect-[3/4] rounded-lg mb-3" /><div className="space-y-2"><div className="skeleton skeleton-text w-2/3 h-3" /><div className="skeleton skeleton-text-lg w-full h-4" /><div className="skeleton skeleton-text w-1/2 h-3" /></div></div>
@@ -14,29 +13,15 @@ function ProductSkeleton() {
 export function HomePage() {
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
-  const { isLoggedIn } = useAuth()
   const { showToast } = useUi()
-  const navigate = useNavigate()
 
   useEffect(() => {
     document.title = '홈 | SpartaFashion'
-    apiFetch<Product[]>('/api/products').then(setProducts).catch((error: Error) => showToast(`상품을 불러오지 못했습니다: ${error.message}`, 'danger')).finally(() => setLoading(false))
+    apiFetch<PageResponse<Product>>('/api/products').then((page) => {
+      if (!page || !Array.isArray(page.content)) throw new Error('상품 목록 응답 형식이 올바르지 않습니다.')
+      setProducts(page.content)
+    }).catch((error: Error) => showToast(`상품을 불러오지 못했습니다: ${error.message}`, 'danger')).finally(() => setLoading(false))
   }, [showToast])
-
-  const addToCart = async (productId: number) => {
-    if (!isLoggedIn) {
-      showToast('로그인이 필요합니다', 'warning')
-      navigate('/login')
-      return
-    }
-    try {
-      await apiFetch('/api/cart/items', { method: 'POST', body: JSON.stringify({ productId, quantity: 1 }) })
-      showToast('장바구니에 담았습니다')
-      window.dispatchEvent(new CustomEvent('cart-updated'))
-    } catch (error) {
-      showToast(`장바구니 추가 실패: ${(error as Error).message}`, 'danger')
-    }
-  }
 
   return <>
     <section className="relative overflow-hidden bg-black text-white hero-gradient-animate hero-noise">
@@ -58,14 +43,9 @@ export function HomePage() {
             <Link to={`/products/${product.id}`} className="block">
               <div className="relative aspect-[3/4] overflow-hidden">
                 <ProductVisual name={product.name} className="card-img w-full h-full" iconClassName="text-6xl" />
-                <div className="card-overlay absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-transparent flex flex-col justify-end p-5">
-                  {product.stock > 0 && <button onClick={(event) => { event.preventDefault(); void addToCart(product.id) }} className="w-full py-3 bg-white text-black text-xs font-black uppercase tracking-wider rounded-full hover:bg-gray-100 transition-colors">담기</button>}
-                </div>
                 {index < 3 && <span className="absolute top-3 left-3 text-[10px] font-black text-white bg-black/80 backdrop-blur-sm px-3 py-1.5 rounded-full">신상</span>}
-                {product.stock <= 5 && product.stock > 0 && <span className="absolute top-3 right-3 text-[10px] font-black text-white bg-red-500/90 backdrop-blur-sm px-3 py-1.5 rounded-full">품절임박</span>}
-                {product.stock === 0 && <div className="absolute inset-0 bg-white/70 backdrop-blur-[2px] flex items-center justify-center"><span className="text-sm font-black text-gray-600 bg-white px-5 py-2 rounded-full shadow-sm">품절</span></div>}
               </div>
-              <div className="card-info p-4 pb-5"><p className="text-[11px] text-gray-400 font-bold uppercase tracking-wider mb-1">SPARTA FASHION</p><h3 className="text-sm font-bold text-gray-900 line-clamp-1">{product.name}</h3><p className="text-base font-black text-gray-900 mt-2">{formatPrice(product.price)}원</p></div>
+              <div className="card-info p-4 pb-5"><p className="text-[11px] text-gray-400 font-bold uppercase tracking-wider mb-1">SPARTA FASHION</p><h3 className="text-sm font-bold text-gray-900 line-clamp-1">{product.name}</h3><p className="text-base font-black text-gray-900 mt-2">{formatPrice(product.originalPrice)}원</p></div>
             </Link>
           </article>
         ))}

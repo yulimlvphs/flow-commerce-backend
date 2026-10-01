@@ -1,6 +1,6 @@
 package com.yulim.flowcommerce.global.exception;
-import com.yulim.flowcommerce.global.constant.ErrorCode;
-import com.yulim.flowcommerce.global.response.ApiResponse;
+import com.yulim.flowcommerce.common.constant.ErrorCode;
+import com.yulim.flowcommerce.common.response.ApiResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

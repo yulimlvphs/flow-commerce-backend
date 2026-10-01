@@ -1,7 +1,7 @@
 package com.yulim.flowcommerce.global.config;
 
-import com.yulim.flowcommerce.global.constant.ErrorCode;
-import com.yulim.flowcommerce.global.response.ApiResponse;
+import com.yulim.flowcommerce.common.constant.ErrorCode;
+import com.yulim.flowcommerce.common.response.ApiResponse;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

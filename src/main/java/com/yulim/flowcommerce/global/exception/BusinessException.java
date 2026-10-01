@@ -1,6 +1,6 @@
 package com.yulim.flowcommerce.global.exception;
 
-import com.yulim.flowcommerce.global.constant.ErrorCode;
+import com.yulim.flowcommerce.common.constant.ErrorCode;
 import lombok.Getter;
 
 @Getter
