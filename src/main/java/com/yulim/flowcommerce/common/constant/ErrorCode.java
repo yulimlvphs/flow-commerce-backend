@@ -18,14 +18,20 @@ public enum ErrorCode {
     DUPLICATE_EMAIL(HttpStatus.CONFLICT, "MEMBER_002", "이미 존재하는 이메일입니다."),
     INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED, "MEMBER_003", "이메일 또는 비밀번호가 올바르지 않습니다."),
 
-    // Point
-    INSUFFICIENT_POINT(HttpStatus.CONFLICT, "POINT_001", "포인트가 부족합니다."),
-    INVALID_POINT_AMOUNT(HttpStatus.BAD_REQUEST, "POINT_002", "포인트 사용 금액이 올바르지 않습니다."),
+    // Seller
+    ALREADY_SELLER(HttpStatus.CONFLICT, "SELLER_001", "이미 판매자 권한을 보유하고 있습니다."),
+    APPLICATION_ALREADY_PENDING(HttpStatus.CONFLICT, "SELLER_002", "이미 심사 중인 판매자 신청이 있습니다."),
+    APPLICATION_NOT_FOUND(HttpStatus.NOT_FOUND, "SELLER_003", "판매자 신청 내역을 찾을 수 없습니다."),
+    APPLICATION_ALREADY_PROCESSED(HttpStatus.CONFLICT, "SELLER_004", "이미 처리된 신청입니다."),
+    DUPLICATE_BUSINESS_NUMBER(HttpStatus.CONFLICT, "SELLER_005", "이미 심사 중이거나 등록된 사업자등록번호입니다."),
 
     // Product
     PRODUCT_NOT_FOUND(HttpStatus.NOT_FOUND, "PRODUCT_001", "상품을 찾을 수 없습니다."),
     PRODUCT_ACCESS_DENIED(HttpStatus.FORBIDDEN, "PRODUCT_002", "해당 상품에 대한 권한이 없습니다."),
     PRODUCT_HAS_ACTIVE_DEAL(HttpStatus.CONFLICT, "PRODUCT_003", "진행 중이거나 예정된 딜이 있어 삭제할 수 없습니다."),
+
+    // Deal
+    DEAL_NOT_FOUND(HttpStatus.NOT_FOUND, "DEAL_001", "딜을 찾을 수 없습니다."),
 
     // Cart
     CART_EMPTY(HttpStatus.BAD_REQUEST, "CART_001", "장바구니가 비어있습니다."),

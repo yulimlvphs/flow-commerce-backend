@@ -1,55 +1,44 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ProductVisual } from '../components/ProductVisual'
-import { useUi } from '../context/UiContext'
 import { apiFetch } from '../lib/api'
 import { formatPrice } from '../lib/format'
-import type { PageResponse, Product } from '../types'
-
-function ProductSkeleton() {
-  return <div className="animate-fade-in"><div className="skeleton skeleton-img aspect-[3/4] rounded-lg mb-3" /><div className="space-y-2"><div className="skeleton skeleton-text w-2/3 h-3" /><div className="skeleton skeleton-text-lg w-full h-4" /><div className="skeleton skeleton-text w-1/2 h-3" /></div></div>
-}
+import { dealStatusLabel } from '../lib/deal'
+import type { Deal, PageResponse } from '../types'
 
 export function HomePage() {
-  const [products, setProducts] = useState<Product[]>([])
+  const [deals, setDeals] = useState<Deal[]>([])
+  const [page, setPage] = useState(0)
+  const [totalPages, setTotalPages] = useState(0)
+  const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
-  const { showToast } = useUi()
-
+  const [error, setError] = useState('')
+  const [retry, setRetry] = useState(0)
   useEffect(() => {
-    document.title = '홈 | SpartaFashion'
-    apiFetch<PageResponse<Product>>('/api/products').then((page) => {
-      if (!page || !Array.isArray(page.content)) throw new Error('상품 목록 응답 형식이 올바르지 않습니다.')
-      setProducts(page.content)
-    }).catch((error: Error) => showToast(`상품을 불러오지 못했습니다: ${error.message}`, 'danger')).finally(() => setLoading(false))
-  }, [showToast])
-
+    let active = true
+    document.title = '타임딜 | SpartaFashion'
+    setLoading(true); setError('')
+    apiFetch<PageResponse<Deal>>(`/api/deals?page=${page}&size=20&sort=id,desc`).then(result => {
+      if (!active) return
+      setDeals(result.content); setTotalPages(result.totalPages); setTotal(result.totalElements)
+    }).catch((e: Error) => { if (active) setError(e.message) }).finally(() => { if (active) setLoading(false) })
+    return () => { active = false }
+  }, [page, retry])
   return <>
-    <section className="relative overflow-hidden bg-black text-white hero-gradient-animate hero-noise">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-14 md:py-20 relative z-10">
-        <div className="flex items-center justify-between animate-fade-in">
-          <div><h1 className="text-4xl sm:text-5xl md:text-6xl font-black leading-[0.95] tracking-tighter">나만의 스타일</h1><p className="text-gray-400 text-sm md:text-base leading-relaxed max-w-md mt-4">트렌디한 스트릿 스타일부터 클래식까지. 당신만의 패션 감각을 표현하세요.</p></div>
-          <a href="#products" className="hidden sm:inline-flex items-center gap-3 px-8 py-4 bg-white text-black font-black text-sm uppercase tracking-wide hover:bg-gray-100 transition-all flex-shrink-0">둘러보기 <i className="ri-arrow-right-line" /></a>
-        </div>
-      </div>
-    </section>
-
-    <section id="products" className="max-w-7xl mx-auto px-4 sm:px-6 py-20">
-      <div className="flex items-end justify-between mb-12"><div><h2 className="text-3xl md:text-4xl font-black text-gray-900 uppercase tracking-tight">신상품</h2><p className="text-xs text-gray-500 mt-3 font-semibold"><span className="font-black text-gray-900">{products.length}</span> 개 상품</p></div></div>
-      {loading && <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">{Array.from({ length: 4 }).map((_, i) => <ProductSkeleton key={i} />)}</div>}
-      {!loading && products.length === 0 && <div className="text-center py-20 animate-fade-in"><i className="ri-inbox-2-line text-5xl text-gray-300 mb-4 inline-block" /><p className="text-gray-500 font-medium text-lg">상품이 없습니다</p><p className="text-gray-400 text-sm mt-1">곧 새로운 상품이 입고됩니다</p></div>}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-        {products.map((product, index) => (
-          <article key={product.id} className="product-card rounded-2xl overflow-hidden animate-fade-in" style={{ animationDelay: `${index * 0.05}s` }}>
-            <Link to={`/products/${product.id}`} className="block">
-              <div className="relative aspect-[3/4] overflow-hidden">
-                <ProductVisual name={product.name} className="card-img w-full h-full" iconClassName="text-6xl" />
-                {index < 3 && <span className="absolute top-3 left-3 text-[10px] font-black text-white bg-black/80 backdrop-blur-sm px-3 py-1.5 rounded-full">신상</span>}
-              </div>
-              <div className="card-info p-4 pb-5"><p className="text-[11px] text-gray-400 font-bold uppercase tracking-wider mb-1">SPARTA FASHION</p><h3 className="text-sm font-bold text-gray-900 line-clamp-1">{product.name}</h3><p className="text-base font-black text-gray-900 mt-2">{formatPrice(product.originalPrice)}원</p></div>
-            </Link>
-          </article>
-        ))}
-      </div>
+    <section className="bg-black text-white hero-gradient-animate"><div className="max-w-7xl mx-auto px-6 py-16"><p className="text-sm text-gray-400 mb-4">SPARTA FASHION · TIME DEAL</p><h1 className="text-4xl md:text-6xl font-black tracking-tight">지금 만나는 타임딜</h1><p className="text-gray-300 mt-5">딜 가격과 판매 일정, 남은 수량을 확인하세요.</p></div></section>
+    <section className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
+      <h2 className="text-2xl font-black">판매 딜</h2><p className="text-sm text-gray-500 mt-2 mb-8">총 {total}개</p>
+      {error && <div role="alert" className="text-red-600 py-8">딜을 불러오지 못했습니다: {error} <button onClick={() => setRetry(retry + 1)} className="underline">다시 시도</button></div>}
+      {loading ? <p role="status">딜을 불러오는 중…</p> : !error && <>
+        {deals.length === 0 && <p className="text-center text-gray-500 py-16">등록된 딜이 없습니다.</p>}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">{deals.map(deal => <article key={deal.id} className="border rounded-2xl overflow-hidden">
+          <Link to={`/deals/${deal.id}`}>
+            {deal.thumbnailUrl ? <img src={deal.thumbnailUrl} alt={deal.name} className="aspect-[3/4] w-full object-cover" /> : <ProductVisual name={deal.name} className="aspect-[3/4]" />}
+            <div className="p-4"><span className="text-xs font-bold">{dealStatusLabel[deal.status]}</span><h3 className="font-bold mt-2">{deal.name}</h3><p className="text-xs text-gray-400 line-through mt-3">{formatPrice(deal.originalPrice)}원</p><p className="text-lg font-black">{formatPrice(deal.dealPrice)}원</p><p className="text-xs text-gray-500 mt-2">남은 수량 {deal.remainingStock}개</p></div>
+          </Link>
+        </article>)}</div>
+        <div className="flex justify-center gap-5 mt-10"><button disabled={page === 0} onClick={() => setPage(page - 1)} className="disabled:opacity-30">이전</button><span>{totalPages ? page + 1 : 0} / {totalPages}</span><button disabled={page + 1 >= totalPages} onClick={() => setPage(page + 1)} className="disabled:opacity-30">다음</button></div>
+      </>}
     </section>
   </>
 }

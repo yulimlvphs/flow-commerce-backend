@@ -53,6 +53,8 @@ public class SecurityConfig {
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize -> authorize
+                        .requestMatchers("/api/admin/**")
+                        .hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST,
                                 "/api/auth/signup",
                                 "/api/auth/login",
@@ -61,8 +63,10 @@ public class SecurityConfig {
                         .permitAll()
                         .requestMatchers("/actuator/health", "/error")
                         .permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/products", "/api/products/{productId}")
+                        .requestMatchers(HttpMethod.GET, "/api/deals", "/api/deals/{dealId}")
                         .permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/products", "/api/products/{productId}")
+                        .hasRole("SELLER")
                         .requestMatchers(HttpMethod.POST, "/api/products")
                         .hasRole("SELLER")
                         .requestMatchers(HttpMethod.PATCH, "/api/products/{productId}")
