@@ -145,3 +145,21 @@ GET http://localhost:8080/actuator/health
 [`scripts/sql/20261001_rename_user_domain.sql`](scripts/sql/20261001_rename_user_domain.sql)을 한 번 실행하고 새 버전을 시작한다.
 테이블과 컬럼을 이름 변경하므로 기존 사용자 ID, 비밀번호, 역할, 리프레시 토큰 및 상품의 판매자 ID가 유지된다.
 신규 DB는 JPA가 `users`와 `refresh_tokens.user_id`를 생성하므로 이 이관 스크립트를 실행하지 않는다.
+
+## 공통 생성·수정 시각
+
+`User`, `Product`, `Deal`은 `common.entity.BaseEntity`를 상속한다.
+`createdAt`과 `updatedAt`은 `Instant`로 저장하며, JPA의 `@PrePersist`와
+`@PreUpdate` 콜백에서 자동 설정한다. 생성 시 두 값은 같고, 변경 감지로
+UPDATE할 때는 `updatedAt`만 갱신한다. JPQL 벌크 UPDATE나 native SQL은
+콜백을 실행하지 않으므로 수정 시각을 별도로 갱신해야 한다.
+
+상품 응답의 `createdAt`은 UTC 오프셋을 포함하는 ISO-8601 형식으로 반환한다.
+신청·심사·삭제·만료 시각은 도메인 이벤트 시각이므로 각 엔티티에서 관리한다.
+
+기존 DB에는 애플리케이션을 중지한 뒤
+[`scripts/sql/20261006_add_entity_updated_at.sql`](scripts/sql/20261006_add_entity_updated_at.sql)을
+한 번 실행한다. 기존 상품·딜의 수정 시각은 생성 시각으로 초기화한다.
+기존 `created_at`이 로컬 시각으로 저장되어 있다면 실제 저장 시간대를 확인하고
+스크립트 실행 전에 UTC로 변환해야 한다. 이미 실행했다면 `created_at`과
+`updated_at` 모두에 필요한 시간대 보정을 적용해야 한다. 신규 DB에는 이 스크립트를 실행하지 않는다.

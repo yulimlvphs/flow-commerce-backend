@@ -1,5 +1,6 @@
 package com.yulim.flowcommerce.domain.product.entity;
 
+import com.yulim.flowcommerce.common.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -12,7 +13,7 @@ import java.time.LocalDateTime;
 @Table(name = "products")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Product {
+public class Product extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -37,9 +38,6 @@ public class Product {
     @Column(nullable = false, length = 20)
     private ProductStatus status;
 
-    @Column(nullable = false, updatable = false)
-    private LocalDateTime createdAt;
-
     private LocalDateTime deletedAt;
 
     @Builder
@@ -50,7 +48,6 @@ public class Product {
         this.originalPrice = originalPrice;
         this.thumbnailUrl = thumbnailUrl;
         this.status = ProductStatus.ACTIVE;
-        this.createdAt = LocalDateTime.now();
     }
 
     public void update(String name, String description, BigDecimal originalPrice, String thumbnailUrl) {

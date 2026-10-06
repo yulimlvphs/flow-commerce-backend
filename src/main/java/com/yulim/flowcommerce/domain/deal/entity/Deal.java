@@ -1,5 +1,6 @@
 package com.yulim.flowcommerce.domain.deal.entity;
 
+import com.yulim.flowcommerce.common.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -13,13 +14,13 @@ import java.time.LocalDateTime;
  * 타임딜 엔티티.
  * remainingStock은 동시성 제어의 핵심 필드이며,
  * 낙관적 락(@Version) 또는 비관적 락(SELECT FOR UPDATE) 전략에 따라
- * 별도 재고 차감 로직(DealStockService 등)에서 원자적으로 갱신한다.
+ * 별도 재고 차감 로직(DealStockService 등)에서 원자적으로 갱신
  */
 @Entity
 @Table(name = "deals")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Deal {
+public class Deal extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -57,9 +58,6 @@ public class Deal {
     @Version
     private Long version; // 낙관적 락용 버전 필드
 
-    @Column(nullable = false, updatable = false)
-    private LocalDateTime createdAt;
-
     @Builder
     private Deal(Long productId, BigDecimal dealPrice, Integer totalStock,
                  Integer maxPurchasePerUser, LocalDateTime openAt,
@@ -76,7 +74,6 @@ public class Deal {
         this.closeAt = closeAt;
         this.holdDurationMinutes = holdDurationMinutes;
         this.status = DealStatus.SCHEDULED;
-        this.createdAt = LocalDateTime.now();
     }
 
     private static void validateTimeRange(LocalDateTime openAt, LocalDateTime closeAt) {
