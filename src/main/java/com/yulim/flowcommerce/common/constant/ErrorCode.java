@@ -30,8 +30,16 @@ public enum ErrorCode {
     PRODUCT_ACCESS_DENIED(HttpStatus.FORBIDDEN, "PRODUCT_002", "해당 상품에 대한 권한이 없습니다."),
     PRODUCT_HAS_ACTIVE_DEAL(HttpStatus.CONFLICT, "PRODUCT_003", "진행 중이거나 예정된 딜이 있어 삭제할 수 없습니다."),
 
+    PRODUCT_PRICE_LOCKED(HttpStatus.CONFLICT, "PRODUCT_004", "활성 딜이 있어 상품 가격을 변경할 수 없습니다."),
+
     // Deal
     DEAL_NOT_FOUND(HttpStatus.NOT_FOUND, "DEAL_001", "딜을 찾을 수 없습니다."),
+    DEAL_ACCESS_DENIED(HttpStatus.FORBIDDEN, "DEAL_002", "해당 딜에 대한 권한이 없습니다."),
+    DEAL_INVALID_PERIOD(HttpStatus.BAD_REQUEST, "DEAL_003", "딜 기간이 올바르지 않습니다."),
+    DEAL_INVALID_PRICE(HttpStatus.BAD_REQUEST, "DEAL_004", "딜 가격이 올바르지 않습니다."),
+    DEAL_INVALID_STOCK(HttpStatus.BAD_REQUEST, "DEAL_005", "딜 재고 설정이 올바르지 않습니다."),
+    DEAL_PERIOD_OVERLAP(HttpStatus.CONFLICT, "DEAL_006", "같은 상품의 딜 기간이 겹칩니다."),
+    DEAL_NOT_MODIFIABLE(HttpStatus.CONFLICT, "DEAL_007", "수정하거나 취소할 수 없는 딜입니다."),
 
     // Cart
     CART_EMPTY(HttpStatus.BAD_REQUEST, "CART_001", "장바구니가 비어있습니다."),

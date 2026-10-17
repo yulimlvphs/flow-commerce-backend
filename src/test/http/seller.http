@@ -1,0 +1,128 @@
+@baseUrl = http://localhost:8080
+@applicantEmail = seller-applicant@example.com
+@applicantPassword = test-password-1234
+@adminEmail = seller-review-admin@example.com
+@adminPassword = test-password-1234
+@businessNumber = 303-03-00001
+
+# 준비: 신청자는 USER, 관리자는 ADMIN인 기존 계정을 사용한다.
+# 위에서부터 실행한다. 거절 후 재신청하여 승인까지 확인한다.
+# 다시 실행하려면 새 USER 계정과 미사용 사업자번호로 바꾼다.
+
+### 준비. 신청자 로그인
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{applicantEmail}}",
+  "password": "{{applicantPassword}}"
+}
+
+> {%
+    if (response.status === 200) {
+        client.global.set("sellerApplicantToken", response.body.data.accessToken);
+    }
+%}
+
+### 준비. 관리자 로그인
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{adminEmail}}",
+  "password": "{{adminPassword}}"
+}
+
+> {%
+    if (response.status === 200) {
+        client.global.set("sellerAdminToken", response.body.data.accessToken);
+    }
+%}
+
+### 1. 판매자 신청
+POST {{baseUrl}}/api/sellers/apply
+Authorization: Bearer {{sellerApplicantToken}}
+Content-Type: application/json
+
+{
+  "businessName": "HTTP 테스트 상점",
+  "businessRegistrationNumber": "{{businessNumber}}"
+}
+
+> {%
+    client.test("1. 판매자 신청", function () {
+        client.assert(response.status === 201, "예상 HTTP 201, 실제 " + response.status);
+        client.assert(response.body.data.status === "PENDING", "상태 확인");
+    });
+    if (response.status === 201) {
+        client.global.set("sellerApplicationId", response.body.data.id);
+    }
+%}
+
+### 2. 내 신청 조회
+GET {{baseUrl}}/api/sellers/apply/me
+Authorization: Bearer {{sellerApplicantToken}}
+
+> {%
+    client.test("2. 내 신청 조회", function () {
+        client.assert(response.status === 200, "예상 HTTP 200, 실제 " + response.status);
+        client.assert(response.body.data.status === "PENDING", "상태 확인");
+    });
+%}
+
+### 3. 관리자 신청 목록 조회
+GET {{baseUrl}}/api/admin/seller-applications?status=PENDING
+Authorization: Bearer {{sellerAdminToken}}
+
+> {%
+    client.test("3. 관리자 신청 목록 조회", function () {
+        client.assert(response.status === 200, "예상 HTTP 200, 실제 " + response.status);
+    });
+%}
+
+### 4. 신청 거절
+POST {{baseUrl}}/api/admin/seller-applications/{{sellerApplicationId}}/reject
+Authorization: Bearer {{sellerAdminToken}}
+Content-Type: application/json
+
+{
+  "reason": "사업자 서류 보완 필요"
+}
+
+> {%
+    client.test("4. 신청 거절", function () {
+        client.assert(response.status === 200, "예상 HTTP 200, 실제 " + response.status);
+        client.assert(response.body.data.status === "REJECTED", "상태 확인");
+    });
+%}
+
+### 승인 확인 준비. 거절 후 재신청
+POST {{baseUrl}}/api/sellers/apply
+Authorization: Bearer {{sellerApplicantToken}}
+Content-Type: application/json
+
+{
+  "businessName": "HTTP 테스트 상점",
+  "businessRegistrationNumber": "{{businessNumber}}"
+}
+
+> {%
+    client.test("승인 확인 준비. 거절 후 재신청", function () {
+        client.assert(response.status === 201, "예상 HTTP 201, 실제 " + response.status);
+        client.assert(response.body.data.status === "PENDING", "상태 확인");
+    });
+    if (response.status === 201) {
+        client.global.set("sellerApplicationId", response.body.data.id);
+    }
+%}
+
+### 5. 신청 승인
+POST {{baseUrl}}/api/admin/seller-applications/{{sellerApplicationId}}/approve
+Authorization: Bearer {{sellerAdminToken}}
+
+> {%
+    client.test("5. 신청 승인", function () {
+        client.assert(response.status === 200, "예상 HTTP 200, 실제 " + response.status);
+        client.assert(response.body.data.status === "APPROVED", "상태 확인");
+    });
+%}

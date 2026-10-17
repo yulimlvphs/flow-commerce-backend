@@ -1,0 +1,138 @@
+@baseUrl = http://localhost:8080
+@sellerEmail = seller@example.com
+@sellerPassword = test-password-1234
+
+# IntelliJ HTTP Client용 상품 API 시나리오.
+# 준비: 이미 SELLER 계정이 있다면 위 이메일/비밀번호를 바꾸고 1번부터 실행한다.
+# 새 계정은 0번 회원가입 후 로컬 개발 DB에서 아래 SQL을 직접 실행한다.
+# UPDATE users SET role = 'SELLER', updated_at = CURRENT_TIMESTAMP
+# WHERE email = 'seller@example.com' AND role = 'USER';
+# 이메일을 변경했다면 SQL의 이메일도 맞춘다. 운영 DB에서 실행하지 않는다.
+# 역할 변경 후 반드시 다시 로그인해야 새 JWT에 SELLER 역할이 반영된다.
+# 실행 순서: 1 로그인 → 2 등록 → 3 목록 → 4 상세 → 5 수정 → 6 삭제 → 7 삭제 확인.
+# sellerAccessToken / sellerProductId는 응답에서 자동 저장하며 auth.http의 변수와 분리한다.
+# 액세스 토큰 만료(기본 15분) 시 1번을 다시 실행한다.
+# 6번은 2번에서 생성한 테스트 상품을 소프트 삭제한다.
+
+### 0. 테스트 계정 회원가입 (최초 한 번만 실행, 이후 위 SQL로 SELLER 변경)
+POST {{baseUrl}}/api/auth/signup
+Content-Type: application/json
+
+{
+  "email": "{{sellerEmail}}",
+  "password": "{{sellerPassword}}"
+}
+
+> {%
+    client.test("회원가입 성공", function () {
+        client.assert(response.status === 201, "새 계정은 201, 이미 가입된 계정은 409를 반환합니다.");
+    });
+%}
+
+### 1. SELLER 계정 로그인 — 액세스 토큰 자동 저장
+< {%
+    client.global.clear("sellerAccessToken");
+%}
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{sellerEmail}}",
+  "password": "{{sellerPassword}}"
+}
+
+> {%
+    client.test("로그인 성공", function () {
+        client.assert(response.status === 200, "로그인에 실패했습니다.");
+        client.assert(!!response.body.data.accessToken, "액세스 토큰이 없습니다.");
+    });
+    if (response.status === 200 && response.body.data.accessToken) {
+        client.global.set("sellerAccessToken", response.body.data.accessToken);
+    }
+%}
+
+### 2. 상품 등록 — 판매자 ID는 요청값이 아닌 JWT에서 추출, 상품 ID 자동 저장
+< {%
+    client.global.clear("sellerProductId");
+%}
+POST {{baseUrl}}/api/products
+Authorization: Bearer {{sellerAccessToken}}
+Content-Type: application/json
+
+{
+  "name": "HTTP 테스트 티셔츠",
+  "description": "SELLER 상품 API 테스트용 상품입니다.",
+  "originalPrice": 29000,
+  "thumbnailUrl": "https://example.com/test-shirt.jpg"
+}
+
+> {%
+    client.test("SELLER 상품 등록 성공", function () {
+        client.assert(response.status === 201, "SELLER 역할인지 확인하세요. USER/ADMIN은 403입니다.");
+        client.assert(response.body.data.status === "ACTIVE", "활성 상품이어야 합니다.");
+    });
+    if (response.status === 201 && response.body.data.id) {
+        client.global.set("sellerProductId", response.body.data.id);
+    }
+%}
+
+### 3. 상품 목록 조회 — 공개 API, data.content에 상품 배열 반환
+GET {{baseUrl}}/api/products?page=0&size=20&sort=id,desc
+
+> {%
+    client.test("상품 목록 조회 성공", function () {
+        client.assert(response.status === 200, "목록 조회 실패");
+        client.assert(Array.isArray(response.body.data.content), "페이지의 content는 배열이어야 합니다.");
+    });
+%}
+
+### 4. 생성한 상품 상세 조회 — 공개 API
+GET {{baseUrl}}/api/products/{{sellerProductId}}
+
+> {%
+    client.test("상품 상세 조회 성공", function () {
+        client.assert(response.status === 200, "상세 조회 실패");
+        client.assert(String(response.body.data.id) === String(client.global.get("sellerProductId")), "상품 ID 불일치");
+    });
+%}
+
+### 5. 본인 상품 수정 — 현재 수정 DTO에서 name은 필수
+PATCH {{baseUrl}}/api/products/{{sellerProductId}}
+Authorization: Bearer {{sellerAccessToken}}
+Content-Type: application/json
+
+{
+  "name": "HTTP 테스트 티셔츠 (수정)",
+  "description": "상품 정보 수정 테스트입니다.",
+  "originalPrice": 25000,
+  "thumbnailUrl": "https://example.com/test-shirt-updated.jpg"
+}
+
+> {%
+    client.test("본인 상품 수정 성공", function () {
+        client.assert(response.status === 200, "수정 실패: 다른 판매자의 상품은 403입니다.");
+        client.assert(response.body.data.name === "HTTP 테스트 티셔츠 (수정)", "상품명 수정 실패");
+        client.assert(response.body.data.originalPrice === 25000, "가격 수정 실패");
+    });
+%}
+
+### 6. 본인 상품 삭제 — 소프트 삭제, 예정/진행 중 딜이 있으면 409
+DELETE {{baseUrl}}/api/products/{{sellerProductId}}
+Authorization: Bearer {{sellerAccessToken}}
+
+> {%
+    client.test("본인 상품 삭제 성공", function () {
+        client.assert(response.status === 200, "삭제 실패: 소유권과 활성 딜 유무를 확인하세요.");
+        client.assert(response.body.code === "SUCCESS", "성공 코드 불일치");
+    });
+%}
+
+### 7. 삭제된 상품 상세 조회 — 404 확인
+GET {{baseUrl}}/api/products/{{sellerProductId}}
+
+> {%
+    client.test("삭제된 상품 조회 거부", function () {
+        client.assert(response.status === 404, "삭제된 상품은 404여야 합니다.");
+        client.assert(response.body.code === "PRODUCT_001", "상품 없음 코드 불일치");
+    });
+%}

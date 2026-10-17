@@ -66,9 +66,9 @@ public class Product extends BaseEntity {
     }
 
     /** 소프트 삭제. 물리 삭제를 하지 않는 이유는 Deal 등 참조 무결성 보호를 위해서다. */
-    public void deactivate() {
+    public void deactivate(LocalDateTime now) {
         this.status = ProductStatus.INACTIVE;
-        this.deletedAt = LocalDateTime.now();
+        this.deletedAt = now;
     }
 
     public boolean isOwnedBy(Long userId) {
