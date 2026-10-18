@@ -24,7 +24,7 @@ export function CartPage() {
     finally { setLoading(false) }
   }
 
-  useEffect(() => { document.title = '장바구니 | SpartaFashion'; void load() }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { document.title = '장바구니 | Flash Deal'; void load() }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const selectedItems = useMemo(() => items.filter((item) => selected.has(item.id)), [items, selected])
   const total = selectedItems.reduce((sum, item) => sum + item.price * item.quantity, 0)

@@ -21,7 +21,7 @@ export function SellerApplicationPage({ showStatus = false }: { showStatus?: boo
 
   useEffect(() => {
     let active = true
-    document.title = `${showStatus ? '내 신청 상태' : '판매자 전환 신청'} | SpartaFashion`
+    document.title = `${showStatus ? '내 신청 상태' : '판매자 전환 신청'} | Flash Deal`
     setLoading(true); setError(''); setApplication(null)
     apiFetch<SellerApplication>('/api/sellers/apply/me')
       .then(result => { if (active) setApplication(result) })

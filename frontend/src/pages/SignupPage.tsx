@@ -9,7 +9,7 @@ export function SignupPage() {
   const navigate = useNavigate()
   const [form, setForm] = useState({ email: '', password: '' })
   const [loading, setLoading] = useState(false)
-  useEffect(() => { document.title = '회원가입 | SpartaFashion' }, [])
+  useEffect(() => { document.title = '회원가입 | Flash Deal' }, [])
 
   const submit = async (event: FormEvent) => {
     event.preventDefault(); setLoading(true)

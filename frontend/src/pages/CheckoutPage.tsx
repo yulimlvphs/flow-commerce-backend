@@ -27,7 +27,7 @@ export function CheckoutPage() {
   const cartItemIds = params.getAll('cartItemIds').map(Number).filter(Number.isFinite)
 
   useEffect(() => {
-    document.title = '주문서 | SpartaFashion'
+    document.title = '주문서 | Flash Deal'
     if (!document.querySelector('script[data-portone-sdk]')) {
       const script = document.createElement('script')
       script.src = 'https://cdn.portone.io/v2/browser-sdk.js'

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, useRef, type FormEvent } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { ProductVisual } from '../components/ProductVisual'
 import { useAuth } from '../context/AuthContext'
 import { useUi } from '../context/UiContext'
@@ -55,7 +55,7 @@ export function SellerProductsPage() {
     } catch (e) { if (request === listRequest.current) setError((e as Error).message) }
     finally { if (request === listRequest.current) setLoading(false) }
   }, [page, size, sort])
-  useEffect(() => { document.title = '상품 관리 | SpartaFashion'; void load(); return () => { listRequest.current++ } }, [load])
+  useEffect(() => { document.title = '상품 관리 | Flash Deal'; void load(); return () => { listRequest.current++ } }, [load])
 
   const edit = async (id: number) => {
     setBusy(true)
@@ -168,7 +168,7 @@ export function SellerProductsPage() {
         <h3 className="font-bold"><button type="button" disabled={busy} onClick={() => viewDetail(product.id)} className="text-left hover:underline">{product.name}</button></h3><p className="mt-2">{formatPrice(product.originalPrice)}원</p><p className="text-sm text-gray-500 mt-2 whitespace-pre-wrap">{product.description}</p>
         <p className="text-xs text-gray-500 mt-3">상품 #{product.id} · 판매자 #{product.sellerId} {product.sellerId === user?.id ? '(내 상품)' : ''}</p><p className="text-xs text-gray-500 mt-1">{product.status === 'ACTIVE' ? '활성' : '비활성'} · 등록 {formatDateTime(product.createdAt)}</p>
         <div className="flex flex-wrap gap-3 mt-4"><button disabled={busy} onClick={() => void viewDetail(product.id)} className="border rounded px-4 py-2 disabled:opacity-50">상세 조회</button>
-        {product.sellerId === user?.id && <><button disabled={busy} onClick={() => void edit(product.id)} className="border rounded px-4 py-2 disabled:opacity-50">수정</button><button disabled={busy} onClick={() => remove(product)} className="text-red-600 border rounded px-4 py-2 disabled:opacity-50">삭제</button></>}</div>
+        {product.sellerId === user?.id && <><Link to={`/seller/deals/new?productId=${product.id}`} className="bg-black text-white rounded px-4 py-2">딜 등록</Link><button disabled={busy} onClick={() => void edit(product.id)} className="border rounded px-4 py-2 disabled:opacity-50">수정</button><button disabled={busy} onClick={() => remove(product)} className="text-red-600 border rounded px-4 py-2 disabled:opacity-50">삭제</button></>}</div>
       </article>)}</div>
       <div className="flex justify-center items-center gap-4 mt-8"><button disabled={page === 0 || busy || loading} onClick={() => setPage(page - 1)} className="disabled:opacity-30">이전</button><span>{totalPages === 0 ? 0 : page + 1} / {totalPages}</span><button disabled={page + 1 >= totalPages || busy || loading} onClick={() => setPage(page + 1)} className="disabled:opacity-30">다음</button></div>
     </>}

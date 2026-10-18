@@ -12,7 +12,7 @@ export function OrderCompletePage() {
   const [error, setError] = useState('')
   const orderId = params.get('orderId')
   useEffect(() => {
-    document.title = '주문 완료 | SpartaFashion'
+    document.title = '주문 완료 | Flash Deal'
     if (!orderId) { setError('주문 정보가 없습니다'); setLoading(false); return }
     apiFetch<Order>(`/api/orders/${orderId}`).then(setOrder).catch(() => setError('주문 정보를 불러올 수 없습니다')).finally(() => setLoading(false))
   }, [orderId])
