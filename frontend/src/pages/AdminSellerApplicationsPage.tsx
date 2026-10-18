@@ -37,7 +37,7 @@ export function AdminSellerApplicationsPage() {
   }, [status, page])
 
   useEffect(() => {
-    document.title = '판매자 신청 관리 | SpartaFashion'
+    document.title = '판매자 신청 관리 | Flash Deal'
     setRejecting(null); setReason(''); setActionError('')
     void load()
     return () => { request.current++ }

@@ -23,7 +23,7 @@ export function OrdersPage() {
     catch (error) { showToast((error as Error).message, 'danger') }
     finally { setLoading(false) }
   }
-  useEffect(() => { document.title = '주문내역 | SpartaFashion'; void load() }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { document.title = '주문내역 | Flash Deal'; void load() }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const cancel = (order: Order) => showConfirm('이 주문을 취소하시겠습니까? 결제 금액이 환불됩니다.', async () => {
     try { await apiFetch(`/api/payments/${order.paymentId}/cancel`, { method: 'POST', body: JSON.stringify({ reason: '사용자 요청 취소' }) }); showToast('주문이 취소되었습니다'); await load() }

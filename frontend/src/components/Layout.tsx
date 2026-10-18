@@ -13,6 +13,7 @@ export function Layout() {
   const { showToast } = useUi()
   const navigate = useNavigate()
   const isSeller = isLoggedIn && user?.role === 'SELLER'
+  const canManageDeals = isLoggedIn && (user?.role === 'SELLER' || user?.role === 'ADMIN')
   const roleLabel = user ? `${roleLabels[user.role]} (${user.role})` : ''
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -50,11 +51,11 @@ export function Layout() {
       <header className={`sf-header sticky top-0 z-50 bg-white border-b border-gray-100 ${scrolled ? 'scrolled' : ''}`}>
         <div className="max-w-[1280px] mx-auto px-4 sm:px-6">
           <div className="flex items-center justify-between h-16">
-            <Link to="/" className="flex items-center gap-1 group" aria-label="SpartaFashion 홈">
-              <span className="text-xl font-light tracking-wider text-sf-black">SPARTA</span>
-              <span className="text-xl font-black tracking-wider text-sf-black">FASHION</span>
+            <Link to="/" className="flex items-center gap-1 group" aria-label="Flash Deal 홈">
+              <span className="text-xl font-light tracking-wider text-sf-black">Flash</span>
+              <span className="text-xl font-black tracking-wider text-sf-black">Deal</span>
             </Link>
-            <nav className="hidden md:flex items-center gap-12"><Link to="/" className="text-sm font-bold">타임딜</Link></nav>
+            <nav className="hidden md:flex items-center gap-12"><Link to="/" className="text-sm font-bold">타임딜</Link>{canManageDeals && <Link to="/seller/deals" className="text-sm font-bold">딜 관리</Link>}</nav>
             <div className="flex items-center gap-3 sm:gap-4">
               {isLoggedIn ? (
                 <div className="relative" ref={userMenuRef}>
@@ -71,6 +72,7 @@ export function Layout() {
                         <p className="text-sm font-semibold text-sf-black">{user?.email ?? '사용자'}</p>
                         <p className="text-xs text-gray-500 mt-0.5">{roleLabel}</p>
                       </div>
+                      {canManageDeals && <Link onClick={() => setUserMenuOpen(false)} to="/seller/deals" className="flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-sf-cream"><i className="ri-time-line" aria-hidden="true" />딜 관리</Link>}
                       {isSeller && <Link onClick={() => setUserMenuOpen(false)} to="/seller/products" className="flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-sf-cream"><i className="ri-store-2-line" aria-hidden="true" />상품 관리</Link>}
                       {user?.role === 'ADMIN' && <Link onClick={() => setUserMenuOpen(false)} to="/admin/seller-applications" className="flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-sf-cream"><i className="ri-shield-user-line" aria-hidden="true" />판매자 신청 관리</Link>}
                       <button onClick={handleLogout} className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-gray-600 hover:bg-sf-cream transition-colors">
@@ -91,7 +93,7 @@ export function Layout() {
             </div>
           </div>
         </div>
-        {mobileMenuOpen && <div className="md:hidden border-t border-gray-100 bg-white"><div className="max-w-[1280px] mx-auto px-4 py-3 space-y-3"><Link to="/" onClick={() => setMobileMenuOpen(false)} className="block text-sm">타임딜</Link></div></div>}
+        {mobileMenuOpen && <div className="md:hidden border-t border-gray-100 bg-white"><div className="max-w-[1280px] mx-auto px-4 py-3 space-y-3"><Link to="/" onClick={() => setMobileMenuOpen(false)} className="block text-sm">타임딜</Link>{canManageDeals && <Link to="/seller/deals" onClick={() => setMobileMenuOpen(false)} className="block text-sm">딜 관리</Link>}</div></div>}
       </header>
 
       <main className="flex-1"><Outlet /></main>
@@ -100,7 +102,7 @@ export function Layout() {
         <div className="max-w-[1280px] mx-auto px-4 sm:px-6 py-16">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
             <div>
-              <div className="flex items-center gap-1 mb-6"><span className="text-lg font-light tracking-wider">SPARTA</span><span className="text-lg font-black tracking-wider">FASHION</span></div>
+              <div className="flex items-center gap-1 mb-6"><span className="text-lg font-light tracking-wider">Flash</span><span className="text-lg font-black tracking-wider">Deal</span></div>
               <p className="text-sm font-light text-gray-300 leading-relaxed">트렌디한 패션을 합리적인 가격에.<br />당신의 스타일을 완성하세요.</p>
             </div>
             <div>
@@ -119,7 +121,7 @@ export function Layout() {
               <ul className="space-y-2.5 text-sm font-light text-gray-400"><li><a href="#" className="hover:text-white transition-colors">이용약관</a></li><li><a href="#" className="hover:text-white transition-colors">개인정보처리방침</a></li><li><a href="#" className="hover:text-white transition-colors">배송/교환/반품</a></li></ul>
             </div>
           </div>
-          <div className="border-t border-gray-800 pt-8"><p className="text-xs font-light text-gray-500">© 2026 SpartaFashion. All rights reserved.</p></div>
+          <div className="border-t border-gray-800 pt-8"><p className="text-xs font-light text-gray-500">© 2026 Flash Deal. All rights reserved.</p></div>
         </div>
       </footer>
     </div>
